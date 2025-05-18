@@ -61,3 +61,32 @@ function toggleMenu() {
         navLinks.classList.toggle('show');
     }
 }
+
+// Contact form submit handling
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("contactForm");
+  const messageBox = document.getElementById("formMessage");
+
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      // Get values
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const message = document.getElementById("message").value.trim();
+
+      // Simple check (you can expand this later)
+      if (name && email && message) {
+        messageBox.textContent = "Thank you! Your message has been sent.";
+        messageBox.style.color = "green";
+
+        // Clear form
+        form.reset();
+      } else {
+        messageBox.textContent = "Please fill out all fields.";
+        messageBox.style.color = "red";
+      }
+    });
+  }
+});
