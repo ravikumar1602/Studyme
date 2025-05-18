@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Website</title>
+  <link rel="stylesheet" href="css/style.css" />
+
+
+</head>
+
+<body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+
+  <!-- Header will be loaded here -->
+  <div id="header"></div>
+
+  <main style="padding: 20px;">
+    <h2>Live Class</h2>
+    <!-- YouTube Live Video Embed -->
+    <video id="my-video" class="video-js vjs-default-skin" controls width="40%" height="400" data-setup='{
+    "techOrder": ["youtube"],
+    "sources": [{
+      "type": "video/youtube",
+      "src": "https://www.youtube.com/watch?v=Z0wheKWKQ7Q"
+    }],
+    "youtube": {
+      "modestbranding": 1,
+      "rel": 1,
+      "showinfo": 1,
+      "iv_load_policy": 3
+    },
+    "controls": true
+  }'>
+    </video>
+
+
+    <p>Join our live class every Monday at 10 AM.</p>
+
+    <h2>Recorded Lectures</h2>
+    <!-- Uploaded YouTube Videos -->
+    <div class="videos">
+
+
+      <iframe width="300" height="200" src="https://www.youtube.com/embed/g2KNvHfL-vY" frameborder="0"
+        allowfullscreen></iframe>
+      <iframe width="300" height="200" src="https://www.youtube.com/embed/L-Hy6ojs5nM" frameborder="0"
+        allowfullscreen></iframe>
+
+
+    </div>
+  </main>
+
+  <!-- Footer will be loaded here -->
+  <div id="footer"></div>
+
+  <script src="js/main.js"></script>
+
+  <script>
+    const links = document.querySelectorAll('.nav-links a');
+    const currentUrl = window.location.pathname;
+
+    links.forEach(link => {
+      if (link.getAttribute('href') === currentUrl || currentUrl.includes(link.getAttribute('href'))) {
+        link.classList.add('active');
+      }
+    });
+  </script>
+
+</body>
+
+</html>
