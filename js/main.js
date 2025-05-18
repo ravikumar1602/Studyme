@@ -34,31 +34,13 @@ function includeHTML(file, id, callback) {
 
 // Function to highlight the active nav link based on current URL
 function highlightActiveNav() {
-  const links = document.querySelectorAll('.nav-links a');
-  let currentUrl = window.location.pathname;
+    const links = document.querySelectorAll('.nav-links a');
+    let currentUrl = window.location.pathname;
 
-  // Normalize path for homepage
-  if (currentUrl === '/' || currentUrl === '/index.html') {
-    currentUrl = 'index.html';
-  }
-
-  links.forEach(link => {
-    const href = link.getAttribute('href');
-
-    if (href === currentUrl || currentUrl.includes(href)) {
-      link.classList.add('active');
-    } else {
-      link.classList.remove('active');
-    }
-  });
-}
-
-
-    // Normalize homepage path
+    // Normalize path for homepage
     if (currentUrl === '/' || currentUrl === '/index.html') {
         currentUrl = 'index.html';
     }
-
 
     links.forEach(link => {
         const href = link.getAttribute('href');
@@ -70,9 +52,12 @@ function highlightActiveNav() {
             link.classList.remove('active');
         }
     });
+}
 
 // Function to toggle the mobile menu
 function toggleMenu() {
     const navLinks = document.getElementById('navLinks');
-    navLinks.classList.toggle('show');
+    if (navLinks) {
+        navLinks.classList.toggle('show');
+    }
 }

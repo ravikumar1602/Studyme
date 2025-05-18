@@ -28,8 +28,6 @@
   100% { transform: rotate(360deg); }
 }
 
-
-
 /* Scroll padding for anchor links */
 html {
   scroll-padding-top: 70px; /* Same as navbar height */
@@ -52,6 +50,8 @@ body {
   padding-top: 70px; /* Adjust based on navbar height */
   font-family: Arial, sans-serif;
   background-color: #f9f9f9;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .navbar {
@@ -133,18 +133,104 @@ body {
   box-sizing: border-box;
   transition: all 0.2s ease;
 }
+
 /* ---------------------------------Header----------------------------------------- */
-  footer {
-    background: #222;
-    color: white;
-    text-align: center;
-    padding: 15px;
-    margin-top: 20px;
-  }
+footer {
+  background: #222;
+  color: white;
+  text-align: center;
+  padding: 15px;
+  margin-top: 20px;
+}
+
 /* ---------------------------------Video.js & YouTube Plugin----------------------------------------- */
-  .video-js {
+.video-js {
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-  
+/* ==+======================= Hero Section ============================ */
+.hero {
+  background: linear-gradient(135deg, #007bff, #00c6ff);
+  color: white;
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.hero p {
+  font-size: 1.2rem;
+}
+
+/* === Video Section === */
+.video-section {
+  padding: 2rem 1rem;
+  background: #f9f9f9;
+}
+
+.video-section h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.video-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+/* Make containers responsive */
+.container, .content, .video-container, .footer-content {
+  max-width: 1200px;
+  padding: 0 15px;
+  margin: auto;
+}
+
+/* Make iframe videos responsive */
+.video-container iframe {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+/* Responsive footer */
+footer {
+  padding: 2rem 1rem;
+  text-align: center;
+  background-color: #222;
+  color: #fff;
+}
+
+footer .footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+footer .footer-links a {
+  color: #ccc;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+footer .footer-links a:hover {
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .footer-links {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  footer {
+    font-size: 0.9rem;
+  }
+}
