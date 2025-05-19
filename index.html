@@ -36,16 +36,23 @@
       <div class="card">
         <h3>Live Classes</h3>
         <!-- Live Session Section -->
-        <section class="live-section">
-          <h2>🔴 Live Now</h2>
-          <div class="live-video">
-            <iframe id="liveVideoIframe" width="400" height="255" frameborder="0" allowfullscreen
-              allow="autoplay; encrypted-media"></iframe>
 
-          </div>
-          <p>Join our daily live sessions.</p>
+        
+<section class="live-section">
+  <h2>🔴 Live Now</h2>
 
-        </section>
+  <div class="live-slider-container">
+    <div class="live-carousel" id="live-carousel">
+      <!-- Live video cards will be injected here dynamically -->
+    </div>
+
+    <div class="live-description">
+      <p id="live-desc-text"></p>
+    </div>
+  </div>
+</section>
+
+
 
         <!-- Archive/Teasers Section -->
         <section class="archive-section">
@@ -81,6 +88,7 @@
   <!-- Footer will be loaded here -->
   <div id="footer"></div>
 
+  <script src="js/liveVideos.js"></script>
   <script src="js/main.js"></script>
 
   <!-- Load Live Video Config -->

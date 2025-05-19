@@ -90,3 +90,52 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const carousel = document.getElementById("live-carousel");
+  const descText = document.getElementById("live-desc-text");
+
+  if (!carousel || !descText || !Array.isArray(liveVideosConfig) || liveVideosConfig.length === 0) return;
+
+  // Dynamically generate live video cards
+  liveVideosConfig.forEach(({ videoId, description }) => {
+    const card = document.createElement("div");
+    card.className = "live-card";
+    card.dataset.description = description;
+    card.innerHTML = `
+      <iframe
+        src="https://www.youtube.com/embed/${videoId}"
+        allowfullscreen
+        loading="lazy"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      ></iframe>
+    `;
+    carousel.appendChild(card);
+  });
+
+  const cards = carousel.querySelectorAll(".live-card");
+  let currentIndex = 0;
+
+  // Initialize description
+  descText.textContent = cards[0].dataset.description || "";
+
+  function slideNext() {
+    currentIndex++;
+    if (currentIndex >= cards.length) {
+      currentIndex = 0;
+    }
+
+    carousel.scrollTo({
+      left: cards[currentIndex].offsetLeft,
+      behavior: "smooth"
+    });
+
+    descText.textContent = cards[currentIndex].dataset.description || "";
+  }
+
+  // Slide every 10 seconds
+  setInterval(slideNext, 10000);
+});
