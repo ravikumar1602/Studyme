@@ -1,14 +1,20 @@
 // video-config.js
 
-// Just change this YouTube video ID
-const currentLiveVideoID = "XKVQ6jCqE00";  // replace with your teacher's live or latest video ID
+// Current live video ID (for the main live video)
+const currentLiveVideoID = "EFI--qJ4EPE";
 
-
-// js/video-config.js
-
-const liveVideos = [
-  "OxJ7d6D3BPA",
-  "oFKMwbS72S4",
-  "JmCPSLONMNA"
+// Carousel videos configuration
+const liveVideosConfig = [
+  {
+    videoId: "EFI--qJ4EPE",
+    description: "Mathematics live session covering algebra and calculus."
+  },
+  {
+    videoId: "ZRxJYorZO7Q",
+    description: "Physics live session on mechanics and thermodynamics."
+  },
+  {
+    videoId: "EFI--qJ4EPE",
+    description: "General Knowledge session focused on current affairs."
+  }
 ];
-

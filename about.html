@@ -4,46 +4,122 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Study Website</title>
+    <title>About Us - StudyZone</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/about.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
     <!--------------------------------------------------------------------- Footer will be loaded here --------------------------------------------------------------------->
     <div id="header"></div>
 
-    
+    <!-- Hero Section -->
+    <section class="about-hero">
+        <div class="container">
+            <h1>About StudyZone</h1>
+            <p>Empowering students through quality education and innovative learning solutions</p>
+        </div>
+    </section>
 
 
+    <!-- Our Mission -->
+    <section class="about-section">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>Our Mission</h2>
+                    <p>At StudyZone, we believe that education should be accessible, engaging, and effective for everyone. 
+                    Our mission is to provide high-quality learning resources that help students achieve their academic goals 
+                    and develop a lifelong love for learning.</p>
+                    
+                    <h2>Our Vision</h2>
+                    <p>We envision a world where every student has access to the tools and resources they need to succeed 
+                    academically and beyond, regardless of their background or circumstances.</p>
+                </div>
+                <div class="about-image">
+                    <img src="images/study-group.jpg" alt="Students studying together" class="about-img">
+                </div>
+            </div>
+        </div>
+    </section>
 
 
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <h2>Why Choose StudyZone?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h3>Expert Educators</h3>
+                    <p>Learn from experienced educators passionate about teaching and student success.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-laptop"></i>
+                    <h3>Interactive Learning</h3>
+                    <p>Engage with interactive content designed to enhance understanding and retention.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-clock"></i>
+                    <h3>Flexible Schedule</h3>
+                    <p>Learn at your own pace with 24/7 access to all our resources.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
+    <!-- Team Section -->
+    <section class="team-section">
+        <div class="container">
+            <h2>Meet Our Team</h2>
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="member-image">
+                        <img src="images/team1.jpg" alt="Team Member">
+                    </div>
+                    <h3>Roshni Kumari</h3>
+                    <p class="position">Founder & Lead Educator</p>
+                    <p class="bio">With over 15 years of teaching experience, Roshni is passionate about making learning accessible to all.</p>
+                </div>
+                <div class="team-member">
+                    <div class="member-image">
+                        <img src="images/team2.jpg" alt="Team Member">
+                    </div>
+                    <h3>Ravi Chaudhary</h3>
+                    <p class="position">Head of Content</p>
+                    <p class="bio">Ravi specializes in creating engaging educational content that resonates with students.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-
-
-
-
-
-
-
-
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Start Learning?</h2>
+            <p>Join thousands of students who are already achieving their academic goals with StudyZone.</p>
+            <a href="index.html#courses" class="cta-button">Explore Courses</a>
+        </div>
+    </section>
 
     <!--------------------------------------------------------------------- Footer will be loaded here --------------------------------------------------------------------->
     <div id="footer"></div>
 
     <script src="js/main.js"></script>
-
     <script>
-  const links = document.querySelectorAll('.nav-links a');
-  const currentUrl = window.location.pathname;
-
-  links.forEach(link => {
-    if (link.getAttribute('href') === currentUrl || currentUrl.includes(link.getAttribute('href'))) {
-      link.classList.add('active');
-    }
-  });
-</script>
-
+        // Highlight active navigation link
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('.nav-links a');
+            const currentUrl = window.location.pathname.split('/').pop() || 'index.html';
+            
+            links.forEach(link => {
+                const linkHref = link.getAttribute('href');
+                if (linkHref === currentUrl || (currentUrl === '' && linkHref === 'index.html')) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
 </body>
-
 </html>

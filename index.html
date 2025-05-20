@@ -36,23 +36,32 @@
       <div class="card">
         <h3>Live Classes</h3>
         <!-- Live Session Section -->
-
-        
-<section class="live-section">
-  <h2>🔴 Live Now</h2>
-
-  <div class="live-slider-container">
-    <div class="live-carousel" id="live-carousel">
-      <!-- Live video cards will be injected here dynamically -->
-    </div>
-
-    <div class="live-description">
-      <p id="live-desc-text"></p>
-    </div>
-  </div>
-</section>
-
-
+        <section class="live-section">
+          <h2>Live Now</h2>
+          
+          <div class="live-container">
+            <div class="live-video-container">
+              <div class="live-badge">LIVE NOW</div>
+              <div class="video-wrapper">
+                <div class="live-carousel" id="live-carousel">
+                  <!-- Live videos will be injected here dynamically -->
+                </div>
+                <button class="carousel-button prev" aria-label="Previous slide">❮</button>
+                <button class="carousel-button next" aria-label="Next slide">❯</button>
+              </div>
+              <div class="carousel-indicators" id="carousel-indicators">
+                <!-- Indicators will be added here by JavaScript -->
+              </div>
+            </div>
+            
+            <div class="live-description">
+              <div class="description-content">
+                <h3>Session Details</h3>
+                <p id="live-desc-text">Join our live session now! Interact with the instructor and other students in real-time. Ask questions and get immediate answers.</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <!-- Archive/Teasers Section -->
         <section class="archive-section">
@@ -88,13 +97,13 @@
   <!-- Footer will be loaded here -->
   <div id="footer"></div>
 
-  <script src="js/liveVideos.js"></script>
+  <!-- Load Video Config First -->
+  <script src="video-config.js"></script>
+  <!-- Then load main JavaScript -->
   <script src="js/main.js"></script>
 
-  <!-- Load Live Video Config -->
-  <script src="video-config.js"></script>
-
   <script>
+    // Highlight active navigation link
     const links = document.querySelectorAll('.nav-links a');
     const currentUrl = window.location.pathname;
 
@@ -103,13 +112,6 @@
         link.classList.add('active');
       }
     });
-
-    // Set the live video dynamically
-    const liveIframe = document.getElementById("liveVideoIframe");
-    if (currentLiveVideoID) {
-      const embedLink = `https://www.youtube.com/embed/${currentLiveVideoID}?autoplay=1&mute=1&rel=0&modestbranding=1&showinfo=0`;
-      liveIframe.src = embedLink;
-    }
   </script>
 
 </body>

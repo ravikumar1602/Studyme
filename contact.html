@@ -4,80 +4,166 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Study Website</title>
+    <title>Contact Us - StudyZone</title>
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/contact.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
-    <!--------------------------------------------------------------------- Footer will be loaded here --------------------------------------------------------------------->
+    <!-- Header will be loaded here -->
     <div id="header"></div>
 
-
-    <!--------------------------------------------------------------------- Middle part --------------------------------------------------------------------->
-
-    <main class="container">
-    <section class="contact-section" style="padding: 2rem 1rem;">
-      <h2 style="text-align:center; color:#007bff;">Contact Us</h2>
-
-      <div class="contact-wrapper" style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center;">
-
-        <!-- Contact Form -->
-        <form class="contactForm" style="flex: 1; min-width: 300px;" onsubmit="return false;">
-          <label for="name">Name</label><br>
-          <input type="text" id="name" placeholder="Your Name" required><br><br>
-
-          <label for="email">Email</label><br>
-          <input type="email" id="email" placeholder="Your Email" required><br><br>
-
-          <label for="message">Message</label><br>
-          <textarea id="message" placeholder="Your Message" rows="5" required></textarea><br><br>
-
-          <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Send Message</button>
-        </form>
-
-        <!-- Add this message box -->
-<div id="formMessage" style="margin-top: 15px; color: green;"></div>
-
-        <!-- Contact Info -->
-        <div class="contact-info" style="flex: 1; min-width: 250px;">
-          <h3>Get in Touch</h3>
-          <p><strong>Email:</strong> studyzone@example.com</p>
-          <p><strong>Phone:</strong> +91 98765 43210</p>
-          <p><strong>Location:</strong> Gujarat, India</p>
-
-          <!-- Optional: Embed Google Map -->
-          <div style="margin-top: 1rem;">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!..."
-              width="100%" height="200" style="border:0;" allowfullscreen="" loading="lazy">
-            </iframe>
-          </div>
+    <!-- Hero Section -->
+    <section class="contact-hero">
+        <div class="container">
+            <h1>Contact Us</h1>
+            <p>We'd love to hear from you. Get in touch with our team for any questions or feedback.</p>
         </div>
-
-      </div>
     </section>
-  </main>
 
-    
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <div class="contact-wrapper">
+            <!-- Contact Form -->
+            <form class="contact-form" id="contactForm" onsubmit="return false;">
+                <h2>Send Us a Message</h2>
+                <div class="form-group">
+                    <label for="name">Your Name</label>
+                    <input type="text" id="name" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Your Message</label>
+                    <textarea id="message" placeholder="How can we help you?" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i> Send Message
+                </button>
+                <div id="formMessage"></div>
+            </form>
 
+            <!-- Contact Info -->
+            <div class="contact-info">
+                <h3>Get in Touch</h3>
+                <div class="contact-details">
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="contact-text">
+                            <h4>Email Us</h4>
+                            <a href="mailto:studyzone@example.com">studyzone@example.com</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="contact-text">
+                            <h4>Call Us</h4>
+                            <a href="tel:+919876543210">+91 98765 43210</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="contact-text">
+                            <h4>Location</h4>
+                            <p>Gujarat, India</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Map -->
+                <div class="map-container">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3691.676121146255!2d72.6369147149547!3d22.30783898532182!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395fc8ab91a3ddab%3A0xac39d3bfe1473fb8!2sGujarat!5e0!3m2!1sen!2sin!4v1620000000000!5m2!1sen!2sin" 
+                        allowfullscreen="" 
+                        loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </section>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <!--------------------------------------------------------------------- Footer will be loaded here --------------------------------------------------------------------->
+    <!-- Footer will be loaded here -->
     <div id="footer"></div>
 
     <script src="js/main.js"></script>
-</body>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const contactForm = document.getElementById('contactForm');
+            const formMessage = document.getElementById('formMessage');
+            
+            // Highlight active navigation link
+            const links = document.querySelectorAll('.nav-links a');
+            const currentUrl = window.location.pathname.split('/').pop() || 'index.html';
+            
+            links.forEach(link => {
+                const linkHref = link.getAttribute('href');
+                if (linkHref === currentUrl || (currentUrl === '' && linkHref === 'index.html')) {
+                    link.classList.add('active');
+                }
+            });
 
+            // Form submission handler
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Get form values
+                    const name = document.getElementById('name').value.trim();
+                    const email = document.getElementById('email').value.trim();
+                    const message = document.getElementById('message').value.trim();
+                    
+                    // Simple validation
+                    if (!name || !email || !message) {
+                        showMessage('Please fill in all fields', 'error');
+                        return;
+                    }
+                    
+                    if (!isValidEmail(email)) {
+                        showMessage('Please enter a valid email address', 'error');
+                        return;
+                    }
+                    
+                    // Here you would typically send the data to a server
+                    // For now, we'll just show a success message
+                    showMessage('Your message has been sent successfully! We\'ll get back to you soon.', 'success');
+                    
+                    // Reset form
+                    contactForm.reset();
+                });
+            }
+            
+            // Show message function
+            function showMessage(message, type) {
+                formMessage.textContent = message;
+                formMessage.className = ''; // Clear previous classes
+                formMessage.classList.add(type);
+                formMessage.style.display = 'block';
+                
+                // Hide message after 5 seconds
+                setTimeout(() => {
+                    formMessage.style.opacity = '0';
+                    setTimeout(() => {
+                        formMessage.style.display = 'none';
+                        formMessage.style.opacity = '1';
+                    }, 500);
+                }, 5000);
+            }
+            
+            // Email validation
+            function isValidEmail(email) {
+                const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return re.test(email);
+            }
+        });
+    </script>
+</body>
 </html>

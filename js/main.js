@@ -1,5 +1,14 @@
 // js/main.js
 
+// Load YouTube IFrame API
+const tag = document.createElement('script');
+tag.src = 'https://www.youtube.com/iframe_api';
+const firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// Store player instances
+let players = [];
+
 // Show the loader immediately when the script runs
 const loader = document.getElementById("loading-overlay");
 if (loader) loader.style.display = "flex";
@@ -96,46 +105,190 @@ document.addEventListener("DOMContentLoaded", function () {
 document.addEventListener("DOMContentLoaded", () => {
   const carousel = document.getElementById("live-carousel");
   const descText = document.getElementById("live-desc-text");
+  const indicatorsContainer = document.getElementById("carousel-indicators");
+  const prevButton = document.querySelector(".carousel-button.prev");
+  const nextButton = document.querySelector(".carousel-button.next");
+  let currentIndex = 0;
+  let autoSlideInterval;
+  const SLIDE_INTERVAL = 10000; // 10 seconds
 
-  if (!carousel || !descText || !Array.isArray(liveVideosConfig) || liveVideosConfig.length === 0) return;
+  if (!carousel || !descText || !indicatorsContainer || !Array.isArray(liveVideosConfig) || liveVideosConfig.length === 0) return;
 
-  // Dynamically generate live video cards
-  liveVideosConfig.forEach(({ videoId, description }) => {
+  // Create cards and indicators
+  liveVideosConfig.forEach(({ videoId, description }, index) => {
+    // Create card
     const card = document.createElement("div");
     card.className = "live-card";
+    card.dataset.index = index;
     card.dataset.description = description;
+    // Create video container with unique ID
+    const playerId = `ytplayer-${Date.now()}-${index}`;
     card.innerHTML = `
-      <iframe
-        src="https://www.youtube.com/embed/${videoId}"
-        allowfullscreen
-        loading="lazy"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      ></iframe>
+      <div class="live-badge">LIVE NOW</div>
+      <div id="${playerId}" class="youtube-player"></div>
     `;
+    
+    // Store player configuration
+    const playerConfig = {
+      videoId: videoId,
+      playerVars: {
+        autoplay: 1,
+        mute: 1,
+        rel: 0,
+        modestbranding: 1,
+        enablejsapi: 1,
+        origin: window.location.origin,
+        controls: 1,
+        disablekb: 1,
+        fs: 0
+      },
+      events: {
+        'onReady': (event) => {
+          // Mute the player when it's ready
+          event.target.mute();
+          // Start playing the video
+          event.target.playVideo();
+        }
+      }
+    };
+    
+    // Create YouTube player instance
+    if (window.YT && window.YT.Player) {
+      const player = new YT.Player(playerId, playerConfig);
+      players.push(player);
+    }
     carousel.appendChild(card);
+
+    // Create indicator
+    const indicator = document.createElement("button");
+    indicator.className = `carousel-indicator ${index === 0 ? 'active' : ''}`;
+    indicator.setAttribute('aria-label', `Go to slide ${index + 1}`);
+    indicator.dataset.index = index;
+    indicatorsContainer.appendChild(indicator);
   });
 
   const cards = carousel.querySelectorAll(".live-card");
-  let currentIndex = 0;
+  const indicators = indicatorsContainer.querySelectorAll(".carousel-indicator");
+  const totalSlides = cards.length;
 
-  // Initialize description
-  descText.textContent = cards[0].dataset.description || "";
+  // Initialize
+  updateActiveState(0);
+  startAutoSlide();
 
-  function slideNext() {
-    currentIndex++;
-    if (currentIndex >= cards.length) {
-      currentIndex = 0;
-    }
-
+  // Navigation functions
+  function goToSlide(index) {
+    index = (index + totalSlides) % totalSlides; // Handle wrap-around
+    currentIndex = index;
+    updateActiveState(index);
+    
+    // Calculate scroll position
+    const cardWidth = cards[0].offsetWidth;
+    const scrollPosition = index * cardWidth;
+    
+    // Smooth scroll to the card
     carousel.scrollTo({
-      left: cards[currentIndex].offsetLeft,
-      behavior: "smooth"
+      left: scrollPosition,
+      behavior: 'smooth'
     });
-
-    descText.textContent = cards[currentIndex].dataset.description || "";
+    
+    // Update description
+    const description = cards[index].dataset.description || 'No description available';
+    document.getElementById('live-desc-text').textContent = description;
   }
 
-  // Slide every 10 seconds
-  setInterval(slideNext, 10000);
+  function updateActiveState(index) {
+    // Update cards
+    cards.forEach((card, i) => {
+      card.classList.toggle('active', i === index);
+    });
+    
+    // Update indicators
+    indicators.forEach((indicator, i) => {
+      indicator.classList.toggle('active', i === index);
+    });
+    
+    // Update description
+    descText.textContent = cards[index].dataset.description || "";
+  }
+
+  function slideNext() {
+    goToSlide(currentIndex + 1);
+    resetAutoSlide();
+  }
+
+  function slidePrev() {
+    goToSlide(currentIndex - 1);
+    resetAutoSlide();
+  }
+
+  function startAutoSlide() {
+    stopAutoSlide();
+    autoSlideInterval = setInterval(slideNext, SLIDE_INTERVAL);
+  }
+
+  function stopAutoSlide() {
+    if (autoSlideInterval) {
+      clearInterval(autoSlideInterval);
+    }
+  }
+
+  function resetAutoSlide() {
+    stopAutoSlide();
+    startAutoSlide();
+  }
+
+  // Event Listeners
+  nextButton.addEventListener('click', slideNext);
+  prevButton.addEventListener('click', slidePrev);
+
+  indicators.forEach(indicator => {
+    indicator.addEventListener('click', (e) => {
+      const index = parseInt(e.target.dataset.index);
+      if (index !== currentIndex) {
+        goToSlide(index);
+        resetAutoSlide();
+      }
+    });
+  });
+
+  // Pause auto-slide on hover
+  carousel.addEventListener('mouseenter', stopAutoSlide);
+  carousel.addEventListener('mouseleave', startAutoSlide);
+
+  // Handle keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') {
+      slideNext();
+    } else if (e.key === 'ArrowLeft') {
+      slidePrev();
+    }
+  });
+
+  // Handle touch events for swipe
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  carousel.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    stopAutoSlide();
+  }, { passive: true });
+
+  carousel.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+    startAutoSlide();
+  }, { passive: true });
+
+  function handleSwipe() {
+    const SWIPE_THRESHOLD = 50;
+    const diff = touchStartX - touchEndX;
+    
+    if (Math.abs(diff) > SWIPE_THRESHOLD) {
+      if (diff > 0) {
+        slideNext();
+      } else {
+        slidePrev();
+      }
+    }
+  }
 });
