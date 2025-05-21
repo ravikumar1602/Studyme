@@ -138,9 +138,16 @@ document.addEventListener("DOMContentLoaded", () => {
         modestbranding: 1,
         enablejsapi: 1,
         origin: window.location.origin,
-        controls: 1,
-        disablekb: 1,
-        fs: 0
+        controls: 0,  // Hide controls
+        disablekb: 1,  // Disable keyboard controls
+        fs: 0,  // Disable fullscreen button
+        iv_load_policy: 3,  // Hide annotations
+        showinfo: 0,  // Hide video title and uploader
+        disable_picture_in_picture: 1,  // Disable picture-in-picture
+        playsinline: 1,  // Play inline on iOS
+        cc_load_policy: 0,  // Hide captions by default
+        widget_referrer: window.location.href,  // Set referrer
+        origin: window.location.origin
       },
       events: {
         'onReady': (event) => {

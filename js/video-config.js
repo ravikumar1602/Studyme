@@ -75,6 +75,94 @@ const videoConfig = {
                     thumbnail: 'https://img.youtube.com/vi/r2a9-g2piPY/maxresdefault.jpg',
                     playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
                     playlistIndex: 6
+                },
+                {
+                    id: 'QJKQLwUzR58',
+                    title: 'Lecture 07: मेसोपोटामिया की सभ्यता (Mesopotamian Civilization)',
+                    description: 'Detailed explanation of the Mesopotamian Civilization, one of the earliest civilizations in the world, covering its history, culture, and contributions.',
+                    duration: '1:25:00',
+                    views: '1.5M',
+                    date: '9 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/QJKQLwUzR58/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 7
+                },
+                {
+                    id: '13vnD9iOQlg',
+                    title: 'Lecture 08: Historical Period (Coins & Epigraphy)',
+                    description: 'Comprehensive analysis of historical periods with focus on numismatics (study of coins) and epigraphy (study of inscriptions). Covers their significance in understanding ancient history and civilizations.',
+                    duration: '1:35:00',
+                    views: '1.1M',
+                    date: '8 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/13vnD9iOQlg/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 16
+                },
+                {
+                    id: 'YPH7XKJRI0g',
+                    title: 'Lecture 09: History Foundation Class by Khan Sir',
+                    description: 'Comprehensive foundation class on History by Khan Sir, covering essential concepts, timelines, and important events. Perfect for building a strong base in history for competitive exams.',
+                    duration: '1:30:00',
+                    views: '1.2M',
+                    date: '8 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/YPH7XKJRI0g/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 18
+                },
+                {
+                    id: 'g6xg3R3TQC4',
+                    title: 'Lecture 10: वैदिक काल (Vedic Period)',
+                    description: 'Comprehensive analysis of the Vedic Period by Khan Sir, covering the early Vedic and later Vedic periods, Vedic literature, society, economy, and religious practices.',
+                    duration: '1:35:00',
+                    views: '1.5M',
+                    date: '8 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/g6xg3R3TQC4/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 19
+                },
+                {
+                    id: 'ROMAN_VIDEO_ID',
+                    title: 'Lecture 11: रोमन सभ्यता (Roman Civilization)',
+                    description: 'Comprehensive coverage of the Roman Civilization, including its history, governance, architecture, and impact on modern society.',
+                    duration: '1:30:00',
+                    views: '1.3M',
+                    date: '9 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/ROMAN_VIDEO_ID/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 20
+                },
+                {
+                    id: 'EGYPTIAN_VIDEO_ID',
+                    title: 'Lecture 12: मिस्र की सभ्यता (Egyptian Civilization)',
+                    description: 'In-depth analysis of the Ancient Egyptian Civilization, covering its pyramids, pharaohs, religion, and cultural achievements.',
+                    duration: '1:28:00',
+                    views: '1.4M',
+                    date: '8 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/EGYPTIAN_VIDEO_ID/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 21
+                },
+                {
+                    id: 'PERSIAN_VIDEO_ID',
+                    title: 'Lecture 13: फ़ारस की सभ्यता (Persian Civilization)',
+                    description: 'Detailed study of the Persian Empire, its administration, culture, and contributions to world civilization.',
+                    duration: '1:20:00',
+                    views: '1.2M',
+                    date: '8 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/PERSIAN_VIDEO_ID/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 22
+                },
+                {
+                    id: 'SPARTA_VIDEO_ID',
+                    title: 'Lecture 14: स्पार्टा की सभ्यता (Spartan Civilization)',
+                    description: 'Comprehensive analysis of the Spartan society, military system, and its role in ancient Greek history.',
+                    duration: '1:22:00',
+                    views: '1.1M',
+                    date: '7 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/SPARTA_VIDEO_ID/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 23
                 }
             ]
         },
