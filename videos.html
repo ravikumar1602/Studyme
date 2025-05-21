@@ -6,6 +6,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Study Website</title>
     <link rel="stylesheet" href="css/style.css" />
+    <style>
+        .subject-card {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        
+        .subject-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .subject-item {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .subject-card:hover .subject-item {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+        
+        .subject-item h3 {
+            margin: 0;
+            padding: 15px 15px 10px;
+            color: #2c3e50;
+        }
+        
+        .video-preview {
+            position: relative;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            overflow: hidden;
+        }
+        
+        .subject-thumbnail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .subject-card:hover .play-overlay {
+            opacity: 1;
+        }
+        
+        .play-icon {
+            font-size: 40px;
+            margin-bottom: 5px;
+        }
+        
+        .play-overlay span:last-child {
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
 </head>
 
 <body>
@@ -38,17 +113,18 @@
   <h2>Subject-wise Videos</h2>
   <div class="subject-list" style="display: flex; flex-direction: column; gap: 15px;">
     
-    <div class="subject-item">
-      <h3>Mathematics</h3>
-      <iframe
-        width="100%"
-        height="150"
-        src="https://www.youtube.com/embed/VIDEO_ID_MATH"
-        title="Mathematics Video"
-        frameborder="0"
-        allowfullscreen
-      ></iframe>
-    </div>
+    <a href="history.html" class="subject-card">
+      <div class="subject-item">
+        <h3>History</h3>
+        <div class="video-preview">
+          <img src="https://img.youtube.com/vi/VIDEO_ID_HISTORY/maxresdefault.jpg" alt="History Lectures" class="subject-thumbnail">
+          <div class="play-overlay">
+            <span class="play-icon">▶</span>
+            <span>View All History Videos</span>
+          </div>
+        </div>
+      </div>
+    </a>
     
     <div class="subject-item">
       <h3>Physics</h3>
@@ -111,12 +187,12 @@
     </div>
 
     <div class="subject-item">
-      <h3>History</h3>
+      <h3>Mathematics</h3>
       <iframe
         width="100%"
         height="150"
-        src="https://www.youtube.com/embed/VIDEO_ID_HISTORY"
-        title="History Video"
+        src="https://www.youtube.com/embed/VIDEO_ID_MATH"
+        title="Mathematics Video"
         frameborder="0"
         allowfullscreen
       ></iframe>
