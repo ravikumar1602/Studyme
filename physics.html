@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>History Videos - StudyZone</title>
+    <title>Physics Videos - StudyZone</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/subjectpage.css">
@@ -17,8 +17,8 @@
     <!-- Page Header -->
     <div class="page-header">
         <div class="container">
-            <h1>History Video Lectures</h1>
-            <p>Learn from expert history teachers and explore historical events in detail</p>
+            <h1>Physics Video Lectures</h1>
+            <p>Master physics concepts with expert teachers and interactive video lessons</p>
         </div>
     </div>
 
@@ -26,34 +26,41 @@
         <div class="page-layout">
             <!-- Teacher Panel -->
             <aside class="teacher-panel">
-                <h2>Our History Teachers</h2>
+                <h2>Our Physics Teachers</h2>
                 <ul class="teacher-list" id="teacherList">
-                    <li class="teacher-item active" data-teacher="khan">
+                    <li class="teacher-item active" data-teacher="khan-physics">
                         <div class="teacher-avatar">KS</div>
                         <div class="teacher-info">
                             <h3>Khan Sir</h3>
-                            <p>Ancient History Expert</p>
+                            <p>Physics Made Easy</p>
                         </div>
                     </li>
-                    <li class="teacher-item" data-teacher="sarah">
-                        <div class="teacher-avatar">SJ</div>
+                    <li class="teacher-item" data-teacher="hcverma">
+                        <div class="teacher-avatar">HV</div>
                         <div class="teacher-info">
-                            <h3>Sarah Johnson</h3>
-                            <p>World Wars Specialist</p>
+                            <h3>H.C. Verma</h3>
+                            <p>Fundamentals of Physics</p>
                         </div>
                     </li>
-                    <li class="teacher-item" data-teacher="michael">
-                        <div class="teacher-avatar">MB</div>
+                    <li class="teacher-item" data-teacher="narendra">
+                        <div class="teacher-avatar">NA</div>
                         <div class="teacher-info">
-                            <h3>Michael Brown</h3>
-                            <p>Modern History Professor</p>
+                            <h3>Narendra Awashthi</h3>
+                            <p>Problem Solving Expert</p>
                         </div>
                     </li>
-                    <li class="teacher-item" data-teacher="priya">
-                        <div class="teacher-avatar">PP</div>
+                    <li class="teacher-item" data-teacher="dcpandey">
+                        <div class="teacher-avatar">DP</div>
                         <div class="teacher-info">
-                            <h3>Priya Patel</h3>
-                            <p>Cultural History Expert</p>
+                            <h3>D.C. Pandey</h3>
+                            <p>Advanced Physics</p>
+                        </div>
+                    </li>
+                    <li class="teacher-item" data-teacher="ashish">
+                        <div class="teacher-avatar">AS</div>
+                        <div class="teacher-info">
+                            <h3>Ashish Arora</h3>
+                            <p>Physics Galaxy</p>
                         </div>
                     </li>
                 </ul>
@@ -63,7 +70,7 @@
             <main class="main-content">
                 <!-- Video Player -->
                 <div class="video-container">
-                    <video id="history-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" data-setup='{"techOrder": ["youtube"], "sources": [{"type": "video/youtube", "src": ""}]}'>
+                    <video id="physics-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" data-setup='{"techOrder": ["youtube"], "sources": [{"type": "video/youtube", "src": ""}]}'>
                         <p class="vjs-no-js">
                             To view this video please enable JavaScript, and consider upgrading to a
                             web browser that
@@ -83,7 +90,7 @@
                         <span id="videoDate">-</span>
                     </div>
                     <p class="video-description" id="videoDescription">
-                        Choose a teacher from the left panel to browse their collection of history lectures.
+                        Choose a teacher from the left panel to browse their collection of physics lectures.
                     </p>
                 </div>
                 
@@ -106,11 +113,50 @@
     <!-- Footer will be loaded here -->
     <footer id="footer"></footer>
 
+    <!-- Load YouTube IFrame API -->
+    <script>
+        // Load the YouTube IFrame API asynchronously
+        var tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    </script>
+    
     <!-- Video.js -->
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/3.0.1/Youtube.min.js"></script>
+    
+    <!-- Load configuration first -->
     <script src="js/video-config.js"></script>
-    <!-- External JavaScript Files -->
+    
+    <!-- Load main application script -->
+    <script>
+        // Initialize video player when YouTube API is ready
+        function onYouTubeIframeAPIReady() {
+            console.log('YouTube API is ready');
+        }
+        
+        // Initialize the application when the page is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM fully loaded');
+            // Initialize the video player
+            if (typeof initPlayer === 'function') {
+                initPlayer();
+            }
+            
+            // Set up teacher handlers
+            if (typeof setupTeacherHandlers === 'function') {
+                setupTeacherHandlers();
+            }
+            
+            // Initialize teachers data
+            if (typeof initTeachersData === 'function') {
+                initTeachersData();
+            }
+        });
+    </script>
+    
+    <!-- Load subject page scripts -->
     <script src="js/subjectpage.js"></script>
 </body>
 </html>

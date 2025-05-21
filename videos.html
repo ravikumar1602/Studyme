@@ -84,158 +84,152 @@
 </head>
 
 <body>
-    <!--------------------------------------------------------------------- Footer will be loaded here --------------------------------------------------------------------->
+    <!-- Header will be loaded here -->
     <div id="header"></div>
 
-    <!--------------------------------------------------------------------- Middle part --------------------------------------------------------------------->
+    <main class="container">
+        <section class="video-section" style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <!-- Left: Live Video -->
+            <div class="live-video" style="flex: 2; min-width: 300px;">
+                <h2>Live Session</h2>
+                <div class="video-container">
+                    <iframe
+                        id="liveVideo"
+                        width="100%"
+                        height="400"
+                        src="https://www.youtube.com/embed/YOUR_LIVE_VIDEO_ID?autoplay=1&mute=1"
+                        title="Live Stream"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
 
-<main class="container">
-  <section class="video-section" style="display: flex; gap: 20px; flex-wrap: wrap;">
-    <!-- Left: Live Video -->
-    <div class="live-video" style="flex: 2; min-width: 300px;">
-      <h2>Live Session</h2>
-      <div class="video-container">
-        <iframe
-          id="liveVideo"
-          width="100%"
-          height="400"
-          src="https://www.youtube.com/embed/YOUR_LIVE_VIDEO_ID?autoplay=1&mute=1"
-          title="Live Stream"       
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen
-        ></iframe>
-      </div>
-    </div>
+            <!-- Right: Subject Wise Videos -->
+            <div class="subject-videos" style="flex: 1; min-width: 250px;">
+                <h2>Subject-wise Videos</h2>
+                <div class="subject-list" style="display: flex; flex-direction: column; gap: 15px;">
+                    <!-- History -->
+                    <a href="history.html" class="subject-card">
+                        <div class="subject-item">
+                            <h3>History</h3>
+                            <div class="video-preview">
+                                <img src="https://img.freepik.com/free-vector/ancient-egypt-hieroglyph-background_52683-45328.jpg" alt="History" class="subject-thumbnail">
+                                <div class="play-overlay">
+                                    <span class="play-icon">▶</span>
+                                    <span>View All History Videos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
 
-    <!-- Right: Subject Wise Videos -->
-    <div class="subject-videos" style="flex: 1; min-width: 250px;">
-  <h2>Subject-wise Videos</h2>
-  <div class="subject-list" style="display: flex; flex-direction: column; gap: 15px;">
-    
-    <a href="history.html" class="subject-card">
-      <div class="subject-item">
-        <h3>History</h3>
-        <div class="video-preview">
-          <img src="https://img.youtube.com/vi/VIDEO_ID_HISTORY/maxresdefault.jpg" alt="History Lectures" class="subject-thumbnail">
-          <div class="play-overlay">
-            <span class="play-icon">▶</span>
-            <span>View All History Videos</span>
-          </div>
-        </div>
-      </div>
-    </a>
-    
-    <div class="subject-item">
-      <h3>Physics</h3>
-      <iframe
-        width="100%"
-        height="150"
-        src="https://www.youtube.com/embed/VIDEO_ID_PHYSICS"
-        title="Physics Video"
-        frameborder="0"
-        allowfullscreen
-      ></iframe>
-    </div>
-    
-    <div class="subject-item">
-      <h3>General Knowledge</h3>
-      <iframe
-        width="100%"
-        height="150"
-        src="https://www.youtube.com/embed/VIDEO_ID_GK"
-        title="General Knowledge Video"
-        frameborder="0"
-        allowfullscreen
-      ></iframe>
-    </div>
-    
-    <div class="subject-item">
-      <h3>English Language</h3>
-      <iframe
-        width="100%"
-        height="150"
-        src="https://www.youtube.com/embed/VIDEO_ID_ENGLISH"
-        title="English Language Video"
-        frameborder="0"
-        allowfullscreen
-      ></iframe>
-    </div>
-    
-    <div class="subject-item">
-      <h3>Reasoning</h3>
-      <iframe
-        width="100%"
-        height="150"
-        src="https://www.youtube.com/embed/VIDEO_ID_REASONING"
-        title="Reasoning Video"
-        frameborder="0"
-        allowfullscreen
-      ></iframe>
-    </div>
-    
-    <div class="subject-item">
-      <h3>Science</h3>
-      <iframe
-        width="100%"
-        height="150"
-        src="https://www.youtube.com/embed/VIDEO_ID_SCIENCE"
-        title="Science Video"
-        frameborder="0"
-        allowfullscreen
-      ></iframe>
-    </div>
+                    <!-- Physics -->
+                    <a href="physics.html" class="subject-card">
+                        <div class="subject-item">
+                            <h3>Physics</h3>
+                            <div class="video-preview">
+                                <img src="https://img.freepik.com/free-vector/atom-science-symbol-icon-design_23-2147538604.jpg" alt="Physics" class="subject-thumbnail">
+                                <div class="play-overlay">
+                                    <span class="play-icon">▶</span>
+                                    <span>View All Physics Videos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
 
-    <div class="subject-item">
-      <h3>Mathematics</h3>
-      <iframe
-        width="100%"
-        height="150"
-        src="https://www.youtube.com/embed/VIDEO_ID_MATH"
-        title="Mathematics Video"
-        frameborder="0"
-        allowfullscreen
-      ></iframe>
-    </div>
+                    <!-- General Knowledge -->
+                    <a href="gk.html" class="subject-card">
+                        <div class="subject-item">
+                            <h3>General Knowledge</h3>
+                            <div class="video-preview">
+                                <img src="https://img.freepik.com/free-vector/brain-icon-vector_53876-168124.jpg" alt="General Knowledge" class="subject-thumbnail">
+                                <div class="play-overlay">
+                                    <span class="play-icon">▶</span>
+                                    <span>View All GK Videos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
 
-    <div class="subject-item">
-      <h3>Geography</h3>
-      <iframe
-        width="100%"
-        height="150"
-        src="https://www.youtube.com/embed/VIDEO_ID_GEOGRAPHY"
-        title="Geography Video"
-        frameborder="0"
-        allowfullscreen
-      ></iframe>
-    </div>
+                    <!-- English Language -->
+                    <a href="english.html" class="subject-card">
+                        <div class="subject-item">
+                            <h3>English Language</h3>
+                            <div class="video-preview">
+                                <img src="https://img.freepik.com/free-vector/alphabet-background-design_1300-2.jpg" alt="English Language" class="subject-thumbnail">
+                                <div class="play-overlay">
+                                    <span class="play-icon">▶</span>
+                                    <span>View All English Videos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
 
-    <!-- Add more subjects similarly -->
+                    <!-- Reasoning -->
+                    <a href="reasoning.html" class="subject-card">
+                        <div class="subject-item">
+                            <h3>Reasoning</h3>
+                            <div class="video-preview">
+                                <img src="https://img.freepik.com/free-vector/puzzle-pieces-background_23-2147541863.jpg" alt="Reasoning" class="subject-thumbnail">
+                                <div class="play-overlay">
+                                    <span class="play-icon">▶</span>
+                                    <span>View All Reasoning Videos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
 
-  </div>
-</div>
+                    <!-- Science -->
+                    <a href="science.html" class="subject-card">
+                        <div class="subject-item">
+                            <h3>Science</h3>
+                            <div class="video-preview">
+                                <img src="https://img.freepik.com/free-vector/science-lab-vector-background-with-microscope-test-tubes_53876-100247.jpg" alt="Science" class="subject-thumbnail">
+                                <div class="play-overlay">
+                                    <span class="play-icon">▶</span>
+                                    <span>View All Science Videos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
 
-  </section>
-</main>
+                    <!-- Mathematics -->
+                    <a href="mathematics.html" class="subject-card">
+                        <div class="subject-item">
+                            <h3>Mathematics</h3>
+                            <div class="video-preview">
+                                <img src="https://img.freepik.com/free-vector/calculator-concept-illustration_114360-1236.jpg" alt="Mathematics" class="subject-thumbnail">
+                                <div class="play-overlay">
+                                    <span class="play-icon">▶</span>
+                                    <span>View All Math Videos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
 
+                    <!-- Geography -->
+                    <a href="geography.html" class="subject-card">
+                        <div class="subject-item">
+                            <h3>Geography</h3>
+                            <div class="video-preview">
+                                <img src="https://img.freepik.com/free-vector/globe-vector-icon-earth-icon-education-symbol_107173-11465.jpg" alt="Geography" class="subject-thumbnail">
+                                <div class="play-overlay">
+                                    <span class="play-icon">▶</span>
+                                    <span>View All Geography Videos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <!--------------------------------------------------------------------- Footer will be loaded here --------------------------------------------------------------------->
+    <!-- Footer will be loaded here -->
     <div id="footer"></div>
 
     <script src="js/main.js"></script>
 </body>
-
+</html>
 </html>
