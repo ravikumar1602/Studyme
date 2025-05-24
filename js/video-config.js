@@ -27,35 +27,37 @@ const videoConfig = {
                     thumbnail: 'https://via.placeholder.com/1280x720/000000/ffffff?text=Lecture+Not+Available'
                 },
                 {
-                    id: 'locked-003',
-                    title: 'Lecture 03 - Currently Not Available',
-                    description: 'This lecture is currently not available. Please check back later for updates.',
-                    duration: '00:00',
-                    views: '0',
-                    date: 'N/A',
-                    thumbnail: 'https://via.placeholder.com/1280x720/000000/ffffff?text=Lecture+Not+Available'
-                },
-                {
-                    id: 'TbF00TmplrM',
-                    title: 'Lecture 04 - Physics Class 4',
-                    description: 'Physics Class 4 lecture by Khan Sir covering important concepts and problem-solving techniques.',
-                    duration: '1:20:00',
-                    views: '1.5M',
-                    date: '2 weeks ago',
-                    thumbnail: 'https://img.youtube.com/vi/TbF00TmplrM/maxresdefault.jpg',
+                    id: '2ZjCW0u-iMY',
+                    title: 'Lecture 03 - Physics Class 3',
+                    description: 'Physics Class 3 lecture by Khan Sir with advanced concepts and examples.',
+                    duration: '1:28:00',
+                    views: '1.0M',
+                    date: '3 days ago',
+                    thumbnail: 'https://img.youtube.com/vi/2ZjCW0u-iMY/maxresdefault.jpg',
                     playlist: 'PLMBDa8Q0jZMrH_cYZ3uWtyfrfAKnGYxqm',
                     playlistIndex: 2
                 },
                 {
-                    id: '2ZjCW0u-iMY',
+                    id: 'fOmR6JUiuX4',
+                    title: 'Lecture 04 - Scalar and Vector',
+                    description: 'Introduction to Scalar and Vector quantities in physics with Khan Sir.',
+                    duration: '1:30:45',
+                    views: '1.8M',
+                    date: '4 days ago',
+                    thumbnail: 'https://img.youtube.com/vi/fOmR6JUiuX4/maxresdefault.jpg',
+                    playlist: 'PLMBDa8Q0jZMrH_cYZ3uWtyfrfAKnGYxqm',
+                    playlistIndex: 3
+                },
+                {
+                    id: 'FgNPOivP_V4',
                     title: 'Lecture 05 - Physics Class 5',
                     description: 'Physics Class 5 lecture by Khan Sir with advanced concepts and examples.',
                     duration: '1:25:30',
                     views: '1.3M',
-                    date: '2 weeks ago',
-                    thumbnail: 'https://img.youtube.com/vi/2ZjCW0u-iMY/maxresdefault.jpg',
+                    date: '5 days ago',
+                    thumbnail: 'https://img.youtube.com/vi/FgNPOivP_V4/maxresdefault.jpg',
                     playlist: 'PLMBDa8Q0jZMrH_cYZ3uWtyfrfAKnGYxqm',
-                    playlistIndex: 2
+                    playlistIndex: 4
                 },
                 {
                     id: 'fOmR6JUiuX4',

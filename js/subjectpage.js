@@ -37,15 +37,25 @@ function initPlayer() {
     try {
         console.log('Initializing video player...');
         
-        // Check if the video element exists
-        const videoEl = document.getElementById('physics-video');
+        // Try to find the video element (works for both physics and history pages)
+        let videoId = 'physics-video';
+        let videoEl = document.getElementById(videoId);
+        
+        // If physics video not found, try history video
+        if (!videoEl) {
+            videoId = 'history-video';
+            videoEl = document.getElementById(videoId);
+        }
+        
         if (!videoEl) {
             console.error('Video element not found');
             return false;
         }
         
+        console.log(`Found video element with ID: ${videoId}`);
+        
         // Initialize Video.js with YouTube tech
-        player = videojs('physics-video', {
+        player = videojs(videoId, {
             techOrder: ['youtube'],
             autoplay: false,
             controls: true,
@@ -279,7 +289,12 @@ function loadTeacherVideos(teacher) {
 function playVideo(video) {
     if (!player) {
         console.error('Video player not initialized');
-        return;
+        // Try to reinitialize the player
+        if (initPlayer()) {
+            console.log('Player reinitialized, attempting to play video');
+        } else {
+            return;
+        }
     }
     
     if (!video || !video.id) {
@@ -371,16 +386,65 @@ function playVideo(video) {
     }
 }
 
-// Update active state in playlist
+// Update active state in playlist and scroll to active item
 function updateActivePlaylistItem(videoId) {
+    // Remove active class from all items
     const playlistItems = document.querySelectorAll('.playlist-item');
+    let activeItem = null;
+    
+    // First pass: remove active class from all items
     playlistItems.forEach(item => {
-        if (item.getAttribute('data-video-id') === videoId) {
+        item.classList.remove('active');
+        if (item.dataset.videoId === videoId) {
             item.classList.add('active');
-        } else {
-            item.classList.remove('active');
+            activeItem = item;
         }
     });
+    
+    // Scroll the active item to the top of the playlist
+    if (activeItem) {
+        const playlistContainer = document.querySelector('.playlist');
+        if (playlistContainer) {
+            // Get the position of the active item relative to the playlist
+            const itemTop = activeItem.offsetTop;
+            
+            // Calculate the scroll position to bring the item to the top
+            // Add a small offset (20px) from the top for better visibility
+            const scrollTo = itemTop - 20;
+            
+            // Use requestAnimationFrame for smoother animation
+            const start = playlistContainer.scrollTop;
+            const change = scrollTo - start;
+            const duration = 500; // Animation duration in ms
+            let startTime = null;
+            
+            function animateScroll(currentTime) {
+                if (!startTime) startTime = currentTime;
+                const timeElapsed = currentTime - startTime;
+                const progress = Math.min(timeElapsed / duration, 1);
+                
+                // Easing function for smooth animation
+                const easeInOutQuad = t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+                
+                // Calculate new scroll position
+                playlistContainer.scrollTop = start + change * easeInOutQuad(progress);
+                
+                // Continue animation if not complete
+                if (timeElapsed < duration) {
+                    requestAnimationFrame(animateScroll);
+                }
+            }
+            
+            // Start the animation
+            requestAnimationFrame(animateScroll);
+        } else {
+            // Fallback to standard scrollIntoView if container not found
+            activeItem.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    }
 }
 
 // Play next video in playlist

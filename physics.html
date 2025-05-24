@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Physics Videos - StudyZone</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/theme.css">
@@ -10,6 +12,7 @@
     <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/3.0.1/Youtube.min.css" rel="stylesheet" />
 </head>
+
 <body>
     <!-- Header will be loaded here -->
     <header id="header"></header>
@@ -70,7 +73,9 @@
             <main class="main-content">
                 <!-- Video Player -->
                 <div class="video-container">
-                    <video id="physics-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" data-setup='{"techOrder": ["youtube"], "sources": [{"type": "video/youtube", "src": ""}]}'>
+                    <video id="physics-video" class="video-js vjs-default-skin vjs-big-play-centered" controls
+                        preload="auto"
+                        data-setup='{"techOrder": ["youtube"], "sources": [{"type": "video/youtube", "src": ""}]}'>
                         <p class="vjs-no-js">
                             To view this video please enable JavaScript, and consider upgrading to a
                             web browser that
@@ -93,13 +98,13 @@
                         Choose a teacher from the left panel to browse their collection of physics lectures.
                     </p>
                 </div>
-                
+
                 <!-- Video List -->
                 <div class="video-grid" id="videoList">
                     <!-- Videos will be loaded here -->
                 </div>
             </main>
-            
+
             <!-- Playlist Panel -->
             <aside class="playlist-panel">
                 <div class="playlist-header">Playlist</div>
@@ -121,42 +126,43 @@
         var firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     </script>
-    
+
     <!-- Video.js -->
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/3.0.1/Youtube.min.js"></script>
-    
+
     <!-- Load configuration first -->
     <script src="js/video-config.js"></script>
-    
+
     <!-- Load main application script -->
     <script>
         // Initialize video player when YouTube API is ready
         function onYouTubeIframeAPIReady() {
             console.log('YouTube API is ready');
         }
-        
+
         // Initialize the application when the page is loaded
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             console.log('DOM fully loaded');
             // Initialize the video player
             if (typeof initPlayer === 'function') {
                 initPlayer();
             }
-            
+
             // Set up teacher handlers
             if (typeof setupTeacherHandlers === 'function') {
                 setupTeacherHandlers();
             }
-            
+
             // Initialize teachers data
             if (typeof initTeachersData === 'function') {
                 initTeachersData();
             }
         });
     </script>
-    
+
     <!-- Load subject page scripts -->
     <script src="js/subjectpage.js"></script>
 </body>
+
 </html>
