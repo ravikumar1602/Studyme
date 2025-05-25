@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Videos API</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Test Videos API</h1>
+    <div id="result">Testing API... Please wait.</div>
+    <pre id="response"></pre>
+    
+    <script>
+    $(document).ready(function() {
+        // Test GET request
+        $.ajax({
+            url: 'videos.php',
+            method: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                $('#result').html('API Test Successful!');
+                $('#response').text(JSON.stringify(response, null, 2));
+                console.log('API Response:', response);
+            },
+            error: function(xhr, status, error) {
+                $('#result').html('API Test Failed!');
+                $('#response').text('Status: ' + status + '\nError: ' + error + '\n\nResponse: ' + xhr.responseText);
+                console.error('API Error:', {status: status, error: error, response: xhr.responseText});
+            }
+        });
+    });
+    </script>
+</body>
+</html>

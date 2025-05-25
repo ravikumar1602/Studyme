@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            margin-bottom: 20px;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            padding: 10px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .error {
+            color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Endpoint Test</h1>
+    
+    <div class="container">
+        <h2>Test GET /api/videos.php</h2>
+        <button onclick="testEndpoint('GET', '/api/videos.php')">Test GET</button>
+        <div id="getResult"></div>
+    </div>
+    
+    <div class="container">
+        <h2>Test POST /api/videos.php</h2>
+        <button onclick="testEndpoint('POST', '/api/videos.php')">Test POST</button>
+        <div id="postResult"></div>
+    </div>
+    
+    <div class="container">
+        <h2>Test with CORS</h2>
+        <button onclick="testWithCors()">Test with CORS</button>
+        <div id="corsResult"></div>
+    </div>
+    
+    <script>
+        async function testEndpoint(method, url) {
+            const resultDiv = method === 'GET' ? document.getElementById('getResult') : document.getElementById('postResult');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error(`Invalid JSON: ${text}`);
+                }
+                
+                resultDiv.innerHTML = `
+                    <p>Status: ${response.status} ${response.statusText}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">Error: ${error.message}</p>
+                    <pre>${error.stack}</pre>
+                `;
+                console.error('Test error:', error);
+            }
+        }
+        
+        async function testWithCors() {
+            const resultDiv = document.getElementById('corsResult');
+            resultDiv.innerHTML = '<p>Testing CORS request...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/videos.php', {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error(`Invalid JSON: ${text}`);
+                }
+                
+                resultDiv.innerHTML = `
+                    <p>Status: ${response.status} ${response.statusText}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">CORS Error: ${error.message}</p>
+                    <pre>${error.stack}</pre>
+                `;
+                console.error('CORS test error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

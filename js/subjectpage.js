@@ -1,23 +1,92 @@
 // Global variable to store teachers data
 let teachersData = {};
 
-// Function to initialize teachers data
-function initTeachersData() {
-    if (window.videoConfig && window.videoConfig.teachers) {
-        teachersData = {}; // Reset the data
-        window.videoConfig.teachers.forEach(teacher => {
-            teachersData[teacher.id] = {
-                name: teacher.name,
-                specialization: teacher.specialization,
-                avatar: teacher.avatar,
-                videos: teacher.videos || []
-            };
+// Function to extract lecture number from title for sorting
+function getLectureNumber(title) {
+    // Match numbers with optional leading zeros (e.g., 01, 1, 02, 2, etc.)
+    const match = title.match(/(?:lecture|lec|episode|ep|part|pt|#)?\s*(\d+)/i);
+    return match ? parseInt(match[1], 10) : 0;
+}
+
+// Function to load videos from API
+async function loadVideosFromAPI(subject, teacherId = null) {
+    try {
+        let url = `/api/videos.php?subject=${subject}`;
+        if (teacherId) {
+            url += `&teacher=${teacherId}`;
+        }
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        let data = await response.json();
+        
+        // Ensure we have an array
+        data = Array.isArray(data) ? data : [];
+        
+        // Sort videos by lecture number in title
+        data.sort((a, b) => {
+            const numA = getLectureNumber(a.title);
+            const numB = getLectureNumber(b.title);
+            
+            // If both have numbers, sort numerically
+            if (numA > 0 && numB > 0) {
+                return numA - numB;
+            }
+            
+            // If only one has a number, put it first
+            if (numA > 0) return -1;
+            if (numB > 0) return 1;
+            
+            // Otherwise, sort alphabetically
+            return a.title.localeCompare(b.title);
         });
-        console.log('Teachers data initialized:', teachersData);
-        return true;
+        
+        return data;
+    } catch (error) {
+        console.error('Error loading videos:', error);
+        throw error;
     }
-    console.error('videoConfig.teachers is not available');
-    return false;
+}
+
+// Function to initialize teachers data
+async function initTeachersData() {
+    if (!window.videoConfig) {
+        console.error('videoConfig is not available');
+        return false;
+    }
+    
+    try {
+        // Initialize with basic teacher data from config
+        teachersData = {};
+        
+        // Load teacher data from config
+        if (Array.isArray(window.videoConfig.teachers)) {
+            for (const teacher of window.videoConfig.teachers) {
+                teachersData[teacher.id] = {
+                    ...teacher,
+                    videos: [] // Start with empty videos, will load from API
+                };
+                
+                // Preload videos for the first teacher
+                if (teacher.id === 'khan') {
+                    try {
+                        const videos = await loadVideosFromAPI('history', teacher.id);
+                        teachersData[teacher.id].videos = videos;
+                    } catch (error) {
+                        console.error(`Error loading videos for ${teacher.name}:`, error);
+                    }
+                }
+            }
+        }
+        
+        console.log('Teachers data initialized with API:', teachersData);
+        return true;
+    } catch (error) {
+        console.error('Error initializing teachers data:', error);
+        return false;
+    }
 }
 
 // DOM Elements
@@ -31,6 +100,8 @@ const videoDescription = document.getElementById('videoDescription');
 
 // Global player instance
 let player;
+let qualityLevels = [];
+let currentQuality = 'auto';
 
 // Function to initialize the video player
 function initPlayer() {
@@ -64,7 +135,21 @@ function initPlayer() {
             preload: 'auto',
             sources: [{
                 src: 'https://www.youtube.com/watch?v=TbF00TmplrM', // Default video
-                type: 'video/youtube'
+                type: 'video/youtube',
+                youtube: {
+                    ytControls: 2,
+                    rel: 0,
+                    fs: 1,
+                    modestbranding: 1,
+                    iv_load_policy: 3,
+                    playsinline: 1,
+                    disablekb: 1,
+                    enablejsapi: 1,
+                    origin: window.location.origin,
+                    widget_referrer: window.location.href,
+                    enablejsapi: 1,
+                    html5: 1
+                }
             }],
             youtube: {
                 ytControls: 2,
@@ -75,7 +160,9 @@ function initPlayer() {
                 playsinline: 1,
                 disablekb: 1,
                 enablejsapi: 1,
-                origin: window.location.origin
+                origin: window.location.origin,
+                widget_referrer: window.location.href,
+                html5: 1
             },
             controlBar: {
                 children: [
@@ -85,12 +172,106 @@ function initPlayer() {
                     'timeDivider',
                     'durationDisplay',
                     'progressControl',
+                    'qualitySelector',
                     'playbackRateMenuButton',
                     'fullscreenToggle'
                 ],
                 playbackRateMenuButton: {
                     rates: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4],
                     defaultRate: 1  // Default to normal speed
+                }
+            },
+            
+            // Register the quality selector component
+            components: {
+                qualitySelector: function(player, options) {
+                    let qualityLevels = [];
+                    let currentQuality = 'auto';
+                    
+                    // Create the button
+                    const button = document.createElement('button');
+                    button.className = 'vjs-quality-selector vjs-menu-button vjs-menu-button-popup vjs-control vjs-button';
+                    button.title = 'Quality';
+                    button.innerHTML = `
+                        <span class="vjs-icon-placeholder" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M7 5h10v2h2v3h-3v-1H8v1H5V7h2V5zm11 8v3c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2v-3c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        <span class="vjs-control-text">Quality</span>
+                    `;
+                    
+                    // Create the menu
+                    const menu = document.createElement('div');
+                    menu.className = 'vjs-menu';
+                    menu.style.display = 'none';
+                    
+                    const menuContent = document.createElement('div');
+                    menuContent.className = 'vjs-menu-content';
+                    menuContent.role = 'menu';
+                    
+                    menu.appendChild(menuContent);
+                    button.appendChild(menu);
+                    
+                    // Toggle menu on button click
+                    button.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+                    });
+                    
+                    // Close menu when clicking outside
+                    document.addEventListener('click', function() {
+                        menu.style.display = 'none';
+                    });
+                    
+                    // Function to update quality levels
+                    const updateQualityLevels = (levels) => {
+                        menuContent.innerHTML = '';
+                        
+                        // Add Auto option
+                        const autoItem = document.createElement('div');
+                        autoItem.className = 'vjs-menu-item' + (currentQuality === 'auto' ? ' vjs-selected' : '');
+                        autoItem.textContent = 'Auto';
+                        autoItem.addEventListener('click', function() {
+                            setQuality('auto');
+                            menu.style.display = 'none';
+                        });
+                        menuContent.appendChild(autoItem);
+                        
+                        // Add quality options
+                        levels.forEach(level => {
+                            const item = document.createElement('div');
+                            item.className = 'vjs-menu-item' + (currentQuality === level ? ' vjs-selected' : '');
+                            item.textContent = level;
+                            item.addEventListener('click', function() {
+                                setQuality(level);
+                                menu.style.display = 'none';
+                            });
+                            menuContent.appendChild(item);
+                        });
+                    };
+                    
+                    // Function to set quality
+                    const setQuality = (quality) => {
+                        currentQuality = quality;
+                        if (quality === 'auto') {
+                            // Auto quality
+                            player.tech_.ytPlayer.setPlaybackQuality('default');
+                        } else {
+                            // Specific quality
+                            player.tech_.ytPlayer.setPlaybackQuality(quality);
+                        }
+                        updateQualityLevels(qualityLevels);
+                    };
+                    
+                    // Expose methods
+                    return {
+                        el: function() {
+                            return button;
+                        },
+                        updateQualityLevels: updateQualityLevels,
+                        setQuality: setQuality
+                    };
                 }
             },
             playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4],
@@ -111,6 +292,55 @@ function initPlayer() {
         player.ready(function() {
             console.log('Player is ready');
             
+            // Get the quality selector component
+            const qualitySelector = player.controlBar.getChild('qualitySelector');
+            
+            // Function to update quality levels
+            const updateQualityLevels = () => {
+                try {
+                    const tech = player.tech_.ytPlayer;
+                    if (tech && tech.getAvailableQualityLevels) {
+                        const levels = tech.getAvailableQualityLevels();
+                        if (levels && levels.length > 0) {
+                            // Filter out 'auto' and 'tiny' qualities
+                            const filteredLevels = levels.filter(level => 
+                                level !== 'auto' && level !== 'tiny' && level !== 'small' && level !== 'medium'
+                            );
+                            
+                            // Sort quality levels from highest to lowest
+                            const qualityOrder = {
+                                'hd2160': 0,
+                                'hd1440': 1,
+                                'hd1080': 2,
+                                'hd720': 3,
+                                'large': 4,
+                                'medium': 5,
+                                'small': 6,
+                                'tiny': 7,
+                                'auto': 8
+                            };
+                            
+                            filteredLevels.sort((a, b) => qualityOrder[a] - qualityOrder[b]);
+                            
+                            // Update the quality selector
+                            qualityLevels = filteredLevels;
+                            if (qualitySelector && qualitySelector.updateQualityLevels) {
+                                qualitySelector.updateQualityLevels(filteredLevels);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error updating quality levels:', e);
+                }
+            };
+            
+            // Listen for quality change events
+            player.tech_.on('loadedmetadata', updateQualityLevels);
+            player.tech_.on('play', updateQualityLevels);
+            
+            // Initial update
+            updateQualityLevels();
+            
             // Load first teacher's videos after player is ready
             const teacherItems = document.querySelectorAll('.teacher-item');
             if (teacherItems.length > 0) {
@@ -129,6 +359,13 @@ function initPlayer() {
 // Function to update the playlist
 function updatePlaylist(teacher) {
     const playlistElement = document.getElementById('playlist');
+    if (!playlistElement) {
+        console.error('Playlist element not found');
+        return;
+    }
+    
+    // Store the current video ID before clearing
+    const currentVideoId = window.currentVideo?.id;
     playlistElement.innerHTML = ''; // Clear existing playlist
     
     if (!teacher || !teacher.videos || teacher.videos.length === 0) {
@@ -136,10 +373,23 @@ function updatePlaylist(teacher) {
         return;
     }
     
+    // Create a document fragment for better performance
+    const fragment = document.createDocumentFragment();
+    
     teacher.videos.forEach((video, index) => {
+        if (!video || !video.id) {
+            console.warn('Skipping invalid video at index', index);
+            return;
+        }
+        
         const li = document.createElement('li');
         li.className = 'playlist-item';
         li.setAttribute('data-video-id', video.id);
+        
+        // Add active class if this is the current video
+        if (video.id === currentVideoId) {
+            li.classList.add('active');
+        }
         
         // Use the same thumbnail as shown in the video player
         const thumbnailUrl = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
@@ -147,142 +397,147 @@ function updatePlaylist(teacher) {
         li.innerHTML = `
             <div class="playlist-item-thumbnail">
                 <img src="${thumbnailUrl}" 
-                     alt="${video.title}" 
+                     alt="${video.title || 'Video thumbnail'}" 
                      loading="lazy"
+                     onerror="this.onerror=null;this.src='https://via.placeholder.com/160x90?text=No+Thumbnail';"
                 >
                 <div class="playlist-item-number">${index + 1}</div>
             </div>
             <div class="playlist-item-content">
-                <div class="playlist-item-title" title="${video.title}">${video.title}</div>
-                <div class="playlist-item-duration">${video.duration}</div>
+                <div class="playlist-item-title" title="${video.title || 'Untitled'}">${video.title || 'Untitled Video'}</div>
+                ${video.duration ? `<div class="playlist-item-duration">${video.duration}</div>` : ''}
             </div>
         `;
         
         // Add click event to play the video
-        li.addEventListener('click', () => {
-            // Remove active class from all items
-            document.querySelectorAll('.playlist-item').forEach(item => {
-                item.classList.remove('active');
-            });
+        li.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             
-            // Add active class to clicked item
-            li.classList.add('active');
+            // Don't do anything if this is already the active video
+            if (li.classList.contains('active') && window.currentVideo?.id === video.id) {
+                return;
+            }
             
             // Play the selected video
             playVideo(video);
         });
         
-        playlistElement.appendChild(li);
+        fragment.appendChild(li);
     });
     
-    // Auto-select first video in playlist
-    if (teacher.videos.length > 0) {
+    // Append all playlist items at once
+    playlistElement.appendChild(fragment);
+    
+    // If there's no current video, auto-select the first one
+    if (!currentVideoId && teacher.videos.length > 0) {
         const firstVideo = teacher.videos[0];
         playVideo(firstVideo);
-        // Add active class to first item
-        const firstItem = playlistElement.querySelector('.playlist-item');
-        if (firstItem) firstItem.classList.add('active');
+    }
+    
+    // If we have a current video, make sure it's visible in the playlist
+    if (currentVideoId) {
+        setTimeout(() => {
+            const activeItem = playlistElement.querySelector(`[data-video-id="${currentVideoId}"]`);
+            if (activeItem) {
+                activeItem.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'start'
+                });
+            }
+        }, 100);
     }
 }
 
 // Load videos for the selected teacher
-function loadTeacherVideos(teacher) {
-    if (!teacher || !teacher.videos) {
-        console.error('No teacher or videos found');
-        videoList.innerHTML = '<div class="no-videos">No videos available for this teacher.</div>';
+async function loadTeacherVideos(teacher) {
+    if (!teacher) {
+        console.error('No teacher provided');
+        videoList.innerHTML = '<div class="no-videos">No teacher selected.</div>';
         return;
     }
-    
-    console.log(`Loading ${teacher.videos.length} videos for teacher:`, teacher.name);
-    
-    // Clear previous videos and show loading state
-    videoList.innerHTML = '<div class="loading-videos">Loading videos...</div>';
-    
-    // Create a document fragment for better performance
-    const fragment = document.createDocumentFragment();
-    let hasVideos = false;
-    
-    // Create video grid items
-    teacher.videos.forEach((video, index) => {
-        // Skip if video is missing required properties
-        if (!video || !video.id || !video.title) {
-            console.warn('Skipping invalid video at index', index, video);
+
+    // Show loading state
+    videoList.innerHTML = '<div class="loading">Loading videos...</div>';
+
+    try {
+        // Load videos from API for this teacher
+        const videos = await loadVideosFromAPI('history', teacher.id);
+        
+        // Update the teacher's videos in the cache
+        if (teachersData[teacher.id]) {
+            teachersData[teacher.id].videos = videos;
+        }
+
+        if (videos.length === 0) {
+            videoList.innerHTML = '<div class="no-videos">No videos available for this teacher.</div>';
             return;
         }
+
+        // Update the playlist with the loaded videos
+        updatePlaylist({
+            ...teacher,
+            videos: videos
+        });
         
-        hasVideos = true;
+        // Render the videos
+        renderVideos(videos);
         
-        console.log(`Adding video ${index + 1}/${teacher.videos.length}:`, video.title);
-        
-        const videoItem = document.createElement('div');
-        videoItem.className = 'video-card';
-        videoItem.setAttribute('data-video-id', video.id);
-        videoItem.setAttribute('tabindex', '0'); // Make it focusable
-        
-        // Set up keyboard navigation
-        videoItem.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
+        // Auto-play the first video if available
+        if (videos[0] && videos[0].id) {
+            setTimeout(() => {
+                playVideo(videos[0]);
+            }, 100);
+        }
+    } catch (error) {
+        console.error('Error loading teacher videos:', error);
+        videoList.innerHTML = `
+            <div class="error">
+                <p>Error loading videos. Please try again later.</p>
+                <button onclick="window.location.reload()" class="btn-retry">Retry</button>
+            </div>
+        `;
+    }
+}
+
+// Render videos in the list
+function renderVideos(videos) {
+    if (!videoList) return;
+    
+    if (!Array.isArray(videos) || videos.length === 0) {
+        videoList.innerHTML = '<div class="no-videos">No videos found.</div>';
+        return;
+    }
+
+    videoList.innerHTML = videos.map(video => `
+        <div class="video-item" data-video-id="${video.id}">
+            <div class="video-thumbnail">
+                <img src="${video.thumbnail || 'https://via.placeholder.com/320x180'}" 
+                     alt="${video.title}" 
+                     loading="lazy"
+                     onerror="this.src='https://via.placeholder.com/320x180?text=Thumbnail+Error'">
+                ${video.duration ? `<span class="duration">${video.duration}</span>` : ''}
+            </div>
+            <div class="video-details">
+                <h3>${video.title}</h3>
+                <div class="video-meta">
+                    ${video.views ? `<span class="views">${video.views} views</span>` : ''}
+                    ${video.date ? `<span class="date">${video.date}</span>` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    // Add click handlers to video items
+    document.querySelectorAll('.video-item').forEach((item, index) => {
+        item.addEventListener('click', () => {
+            const video = videos[index];
+            if (video) {
                 playVideo(video);
             }
         });
-        
-        // Add ARIA attributes for accessibility
-        videoItem.setAttribute('role', 'button');
-        videoItem.setAttribute('aria-label', `Play video: ${video.title}`);
-        
-        // Create thumbnail with error handling
-        const thumbnailUrl = video.thumbnail || 'https://via.placeholder.com/320x180?text=No+Thumbnail';
-        const thumbnail = new Image();
-        thumbnail.src = thumbnailUrl;
-        thumbnail.loading = 'lazy';
-        thumbnail.alt = video.title;
-        thumbnail.onerror = function() {
-            this.src = 'https://via.placeholder.com/320x180?text=Thumbnail+Not+Available';
-        };
-        
-        // Create video card content
-        videoItem.innerHTML = `
-            <div class="video-thumbnail">
-                <img src="${thumbnailUrl}" alt="${video.title}" loading="lazy" onerror="this.src='https:\\/\\/via.placeholder.com/320x180?text=Thumbnail+Error'">
-                ${video.duration ? `<div class="video-duration">${video.duration}</div>` : ''}
-            </div>
-            <div class="video-card-info">
-                <h3 class="video-title">${video.title}</h3>
-                <div class="video-card-meta">
-                    ${video.views ? `<span class="video-views">${video.views} views</span>` : ''}
-                    ${video.date ? `<span class="video-date">${video.date}</span>` : ''}
-                </div>
-            </div>
-        `;
-        
-        // Play video when clicked
-        videoItem.addEventListener('click', (e) => {
-            e.preventDefault();
-            playVideo(video);
-            videoItem.focus(); // Keep focus for keyboard users
-        });
-        
-        fragment.appendChild(videoItem);
     });
-    
-    // Clear loading state and append videos
-    videoList.innerHTML = '';
-    
-    if (!hasVideos) {
-        videoList.innerHTML = '<div class="no-videos">No valid videos found for this teacher.</div>';
-        return;
-    }
-    
-    videoList.appendChild(fragment);
-    
-    // Auto-play the first video if available
-    if (teacher.videos.length > 0 && teacher.videos[0].id) {
-        // Small delay to ensure DOM is updated
-        setTimeout(() => {
-            playVideo(teacher.videos[0]);
-        }, 100);
-    }
 }
 
 // Play the selected video
@@ -293,6 +548,7 @@ function playVideo(video) {
         if (initPlayer()) {
             console.log('Player reinitialized, attempting to play video');
         } else {
+            console.error('Failed to initialize player');
             return;
         }
     }
@@ -304,13 +560,16 @@ function playVideo(video) {
     
     console.log('Playing video:', video.title, 'ID:', video.id);
     
+    // Store the current video for reference
+    window.currentVideo = video;
+    
     try {
         // Update UI immediately to show loading state
-        videoTitle.textContent = video.title || 'Loading...';
-        videoDuration.textContent = video.duration || '';
-        videoViews.textContent = video.views ? `${video.views} views` : '';
-        videoDate.textContent = video.date || '';
-        videoDescription.textContent = video.description || '';
+        if (videoTitle) videoTitle.textContent = video.title || 'Loading...';
+        if (videoDuration) videoDuration.textContent = video.duration || '';
+        if (videoViews) videoViews.textContent = video.views ? `${video.views} views` : '';
+        if (videoDate) videoDate.textContent = video.date || '';
+        if (videoDescription) videoDescription.textContent = video.description || '';
         
         // Update active state in playlist
         updateActivePlaylistItem(video.id);
@@ -327,9 +586,17 @@ function playVideo(video) {
         
         // Scroll the active playlist item into view
         setTimeout(() => {
-            const activeItem = document.querySelector(`.playlist-item[data-video-id="${video.id}"].active`);
+            const activeItem = document.querySelector(`.playlist-item[data-video-id="${video.id}"]`);
             const playlist = document.querySelector('.playlist');
             if (activeItem && playlist) {
+                // Remove active class from all items first
+                document.querySelectorAll('.playlist-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                // Add active class to current item
+                activeItem.classList.add('active');
+                
+                // Scroll to active item
                 activeItem.scrollIntoView({
                     behavior: 'smooth',
                     block: 'nearest',
@@ -338,9 +605,62 @@ function playVideo(video) {
             }
         }, 100);
         
+        // Remove any existing play overlay
+        const existingOverlay = document.querySelector('.play-overlay');
+        if (existingOverlay) existingOverlay.remove();
+        
+        // Show play button overlay when autoplay fails
+        function showPlayButtonOverlay() {
+            // Create play button overlay
+            const playOverlay = document.createElement('div');
+            playOverlay.className = 'play-overlay';
+            playOverlay.innerHTML = `
+                <button class='play-button' aria-label='Play video'>
+                    <i class='fas fa-play'></i> Play Video
+                </button>
+            `;
+            
+            // Add click handler to play on user interaction
+            const playButton = playOverlay.querySelector('.play-button');
+            const playOnClick = function() {
+                player.play().then(() => {
+                    playOverlay.remove();
+                }).catch(e => {
+                    console.error('Still cannot play video:', e);
+                });
+            };
+            
+            playButton.addEventListener('click', playOnClick);
+            
+            // Add overlay to the player
+            const playerEl = document.querySelector('.video-js');
+            if (playerEl) {
+                playerEl.style.position = 'relative';
+                playerEl.appendChild(playOverlay);
+            }
+            
+            // Also try to play when the user interacts with the page
+            const playOnInteraction = function() {
+                player.play().then(() => {
+                    playOverlay.remove();
+                    document.removeEventListener('click', playOnInteraction);
+                    document.removeEventListener('keydown', playOnInteraction);
+                });
+            };
+            
+            document.addEventListener('click', playOnInteraction);
+            document.addEventListener('keydown', playOnInteraction);
+        }
+        
         // Handle video ready state
         const onReady = function() {
             console.log('Video ready to play:', video.title);
+            
+            // Update the URL with the current video ID
+            if (history.pushState) {
+                const newUrl = `${window.location.pathname}?v=${video.id}`;
+                window.history.pushState({ path: newUrl }, '', newUrl);
+            }
             
             // Try to play the video
             const playPromise = player.play();
@@ -350,9 +670,15 @@ function playVideo(video) {
                 playPromise.catch(error => {
                     console.log('Autoplay prevented, attempting to play muted...');
                     player.muted(true);
-                    return player.play();
+                    return player.play().catch(e => {
+                        console.log('Autoplay with sound failed, showing play button');
+                        showPlayButtonOverlay();
+                    });
                 }).catch(error => {
                     console.error('Error playing video:', error);
+                    // Show error message to user
+                    if (videoTitle) videoTitle.textContent = 'Click to play video';
+                    showPlayButtonOverlay();
                 });
             }
             
@@ -449,18 +775,52 @@ function updateActivePlaylistItem(videoId) {
 
 // Play next video in playlist
 function playNextVideo(currentVideo) {
-    const teacherId = document.querySelector('.teacher-item.active')?.getAttribute('data-teacher');
-    if (!teacherId) return;
+    if (!currentVideo || !currentVideo.id) {
+        console.error('Invalid current video');
+        return;
+    }
     
-    const teacher = teachersData[teacherId];
-    if (!teacher || !teacher.videos) return;
+    // Find the current teacher
+    const currentTeacher = Object.values(teachersData).find(teacher => 
+        teacher.videos && teacher.videos.some(v => v.id === currentVideo.id)
+    );
     
-    const currentIndex = teacher.videos.findIndex(v => v.id === currentVideo.id);
-    if (currentIndex === -1 || currentIndex >= teacher.videos.length - 1) return;
+    if (!currentTeacher || !currentTeacher.videos) {
+        console.error('Could not find current teacher or videos');
+        return;
+    }
     
-    // Play next video
-    const nextVideo = teacher.videos[currentIndex + 1];
-    playVideo(nextVideo);
+    // Find the index of the current video
+    const currentIndex = currentTeacher.videos.findIndex(v => v.id === currentVideo.id);
+    if (currentIndex === -1) {
+        console.error('Current video not found in playlist');
+        return;
+    }
+    
+    // Check if there's a next video
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < currentTeacher.videos.length) {
+        const nextVideo = currentTeacher.videos[nextIndex];
+        console.log('Playing next video:', nextVideo.title);
+        
+        // Update the URL with the next video ID
+        if (history.pushState) {
+            const newUrl = `${window.location.pathname}?v=${nextVideo.id}`;
+            window.history.pushState({ path: newUrl }, '', newUrl);
+        }
+        
+        playVideo(nextVideo);
+    } else {
+        console.log('Reached the end of the playlist');
+        // Optional: Show a message or handle end of playlist
+        if (videoTitle) videoTitle.textContent = 'End of Playlist';
+        if (videoDescription) videoDescription.textContent = 'You have reached the end of the playlist.';
+        
+        // Remove active class from all playlist items
+        document.querySelectorAll('.playlist-item').forEach(item => {
+            item.classList.remove('active');
+        });
+    }
 }
 
 // Toggle teacher panel on mobile
@@ -571,87 +931,75 @@ function handleResize() {
     }
 }
 
-// Initialize the application when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM fully loaded');
+// Function to initialize the application
+window.initializeApp = async function() {
+    console.log('Initializing application...');
     
-    // Set up mobile dropdown
-    setupMobileDropdown();
-    
-    // Set up window resize handler
-    window.addEventListener('resize', handleResize);
-    
-    // Initialize the correct view based on current screen size
-    handleResize();
-    
-    // Initialize teachers data first
-    if (!initTeachersData()) {
-        console.error('Failed to initialize teachers data');
-        return;
-    }
-    
-    // Initialize the video player
     try {
-        initPlayer();
-        console.log('Video player initialized');
-    } catch (error) {
-        console.error('Error initializing video player:', error);
-    }
-    
-    // Load header and footer
-    fetch('header.html')
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById('header').innerHTML = html;
-        })
-        .catch(error => console.error('Error loading header:', error));
-        
-    fetch('footer.html')
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById('footer').innerHTML = html;
-        })
-        .catch(error => console.error('Error loading footer:', error));
-    
-    // Set up teacher item click handlers
-    const setupTeacherHandlers = () => {
-        const items = document.querySelectorAll('.teacher-item');
-        console.log(`Found ${items.length} teacher items`);
-        
-        items.forEach(item => {
-            item.addEventListener('click', function() {
+        // Initialize the video player
+        if (typeof initPlayer === 'function') {
+            initPlayer();
+        }
+
+        // Set up UI elements
+        setupMobileDropdown();
+        if (typeof setupTeacherHandlers === 'function') {
+            setupTeacherHandlers();
+        }
+        window.addEventListener('resize', handleResize);
+        handleResize();
+
+        // Load header and footer
+        await Promise.all([
+            fetch('header.html').then(r => r.text()).then(html => {
+                document.getElementById('header').innerHTML = html;
+            }).catch(error => {
+                console.error('Error loading header:', error);
+            }),
+            fetch('footer.html').then(r => r.text()).then(html => {
+                document.getElementById('footer').innerHTML = html;
+            }).catch(error => {
+                console.error('Error loading footer:', error);
+            })
+        ]);
+
+        // Initialize teachers data
+        if (typeof initTeachersData === 'function') {
+            await initTeachersData();
+        }
+
+        // Set up teacher click handlers
+        const teacherItems = document.querySelectorAll('.teacher-item');
+        teacherItems.forEach(item => {
+            item.addEventListener('click', async function() {
                 const teacherId = this.getAttribute('data-teacher');
-                console.log('Teacher clicked:', teacherId);
-                const teacher = teachersData[teacherId];
-                
-                if (!teacher) {
-                    console.error('Teacher not found:', teacherId);
-                    return;
+                if (teacherId && teachersData[teacherId]) {
+                    // Update UI
+                    teacherItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Load videos
+                    await loadTeacherVideos(teachersData[teacherId]);
                 }
-                
-                console.log('Loading teacher data:', teacher);
-                
-                // Update active state
-                items.forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Load teacher's videos
-                loadTeacherVideos(teacher);
-                
-                // Update playlist
-                updatePlaylist(teacher);
             });
         });
-        
-        // Click the first teacher by default if available
-        if (items.length > 0) {
-            console.log('Clicking first teacher item');
-            items[0].click();
-        } else {
-            console.warn('No teacher items found');
+
+        // Load first teacher's videos by default
+        const firstTeacher = document.querySelector('.teacher-item');
+        if (firstTeacher) {
+            firstTeacher.click();
         }
-    };
-    
-    // Wait a short time to ensure the DOM is fully ready
-    setTimeout(setupTeacherHandlers, 100);
-});
+    } catch (error) {
+        console.error('Error initializing app:', error);
+        document.body.innerHTML = `
+            <div style="padding: 2rem; text-align: center;">
+                <h2>Something went wrong</h2>
+                <p>${error.message}</p>
+                <button onclick="window.location.reload()" class="btn-retry">Reload Page</button>
+            </div>
+        `;
+    }
+};
+
+// Initialize the application when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', initializeApp);

@@ -1,0 +1,32 @@
+{
+    "videos": [
+        {
+            "id": "eleVAqWoFrw",
+            "title": "Lacture-21 history Foundation by khan sir",
+            "description": "",
+            "url": "https:\/\/www.youtube.com\/watch?v=eleVAqWoFrw&list=PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB&index=44",
+            "thumbnail": "https:\/\/img.youtube.com\/vi\/eleVAqWoFrw\/maxresdefault.jpg",
+            "subject": "history",
+            "teacher": "",
+            "duration": "0:00",
+            "views": "0",
+            "date": "2025-05-25T19:37:42.128Z",
+            "created_at": "2025-05-25 19:37:42",
+            "updated_at": "2025-05-25 19:37:42"
+        },
+        {
+            "id": "eleVAqWoFrw",
+            "title": "Lacture-21 history Foundation by khan sir",
+            "description": "",
+            "url": "https:\/\/www.youtube.com\/watch?v=eleVAqWoFrw&list=PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB&index=44",
+            "thumbnail": "https:\/\/img.youtube.com\/vi\/eleVAqWoFrw\/maxresdefault.jpg",
+            "subject": "history",
+            "teacher": "khan",
+            "duration": "0:00",
+            "views": "0",
+            "date": "2025-05-25T19:50:45.655Z",
+            "created_at": "2025-05-25 19:50:45",
+            "updated_at": "2025-05-25 19:50:45"
+        }
+    ]
+}

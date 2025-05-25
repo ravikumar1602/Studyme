@@ -1,0 +1,115 @@
+{
+    "videos": [
+        {
+            "id": "68337b8a254f3",
+            "url": "https:\/\/www.youtube.com\/watch?v=aYx-ne8gLPI&list=PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB&index=2",
+            "title": "Lecture 01 : History Introduction Class || By Khan Sir || Foundation",
+            "description": "",
+            "thumbnail": "https:\/\/img.youtube.com\/vi\/aYx-ne8gLPI\/hqdefault.jpg",
+            "subject": "history",
+            "teacher": "khan",
+            "duration": "0:00",
+            "views": "0",
+            "date": "2025-05-25T20:20:26.136Z",
+            "created_at": "2025-05-25 20:20:26",
+            "updated_at": "2025-05-25 20:20:26",
+            "video_id": "aYx-ne8gLPI"
+        },
+        {
+            "id": "68337c5a1e8bf",
+            "url": "https:\/\/www.youtube.com\/watch?v=tjECfRgx-jA&list=PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB&index=4",
+            "title": "Lecture 02 : History(Indus Valley Civilization)",
+            "description": "",
+            "thumbnail": "https:\/\/img.youtube.com\/vi\/tjECfRgx-jA\/hqdefault.jpg",
+            "subject": "history",
+            "teacher": "khan",
+            "duration": "0:00",
+            "views": "0",
+            "date": "2025-05-25T20:23:54.110Z",
+            "created_at": "2025-05-25 20:23:54",
+            "updated_at": "2025-05-25 20:23:54",
+            "video_id": "tjECfRgx-jA"
+        }
+    ],
+    "teachers": {
+        "khan": {
+            "id": "khan",
+            "name": "Khan Sir",
+            "description": "Experienced educator with expertise in history and general knowledge",
+            "image_url": "",
+            "subjects": "history,gk"
+        },
+        "sarah": {
+            "id": "sarah",
+            "name": "Sarah Johnson",
+            "description": "Passionate about making mathematics fun and accessible",
+            "image_url": "",
+            "subjects": "mathematics,reasoning"
+        },
+        "david": {
+            "id": "david",
+            "name": "David Miller",
+            "description": "Geography expert with field experience in various countries",
+            "image_url": "",
+            "subjects": "geography"
+        },
+        "priya": {
+            "id": "priya",
+            "name": "Priya Sharma",
+            "description": "Science enthusiast with a focus on practical learning",
+            "image_url": "",
+            "subjects": "science"
+        },
+        "alex": {
+            "id": "alex",
+            "name": "Alex Chen",
+            "description": "English language and literature specialist",
+            "image_url": "",
+            "subjects": "english"
+        }
+    },
+    "subjects": {
+        "history": {
+            "id": "history",
+            "name": "History",
+            "description": "Learn about historical events and civilizations",
+            "thumbnail_url": ""
+        },
+        "geography": {
+            "id": "geography",
+            "name": "Geography",
+            "description": "Study of places and the relationships between people and their environments",
+            "thumbnail_url": ""
+        },
+        "mathematics": {
+            "id": "mathematics",
+            "name": "Mathematics",
+            "description": "The abstract science of number, quantity, and space",
+            "thumbnail_url": ""
+        },
+        "science": {
+            "id": "science",
+            "name": "Science",
+            "description": "The study of the natural and physical world through observation and experiment",
+            "thumbnail_url": ""
+        },
+        "english": {
+            "id": "english",
+            "name": "English",
+            "description": "Study of the English language and literature",
+            "thumbnail_url": ""
+        },
+        "gk": {
+            "id": "gk",
+            "name": "General Knowledge",
+            "description": "General awareness and knowledge about various topics",
+            "thumbnail_url": ""
+        },
+        "reasoning": {
+            "id": "reasoning",
+            "name": "Reasoning",
+            "description": "Logical and analytical reasoning skills",
+            "thumbnail_url": ""
+        }
+    }
+}

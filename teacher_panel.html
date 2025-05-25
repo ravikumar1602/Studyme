@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Panel</title>
+    <link rel="stylesheet" href="css/teacher_panel.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Teacher Panel</h1>
+            <div class="teacher-info">
+                <img id="teacherAvatar" src="" alt="Teacher">
+                <div>
+                    <h2 id="teacherName">Loading...</h2>
+                    <p id="teacherSubject"></p>
+                </div>
+            </div>
+        </header>
+        
+        <main>
+            <section class="videos-section">
+                <div class="section-header">
+                    <h2>My Videos</h2>
+                    <button id="addVideoBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Video
+                    </button>
+                </div>
+                
+                <div class="video-filters">
+                    <select id="subjectFilter" class="form-control">
+                        <option value="">All Subjects</option>
+                    </select>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search videos...">
+                </div>
+                
+                <div id="videosList" class="videos-grid">
+                    <!-- Videos will be loaded here -->
+                    <div class="loading">Loading videos...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add/Edit Video Modal -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Video</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="videoForm">
+                    <input type="hidden" id="videoId">
+                    
+                    <div class="form-group">
+                        <label for="videoTitle">Title *</label>
+                        <input type="text" id="videoTitle" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="videoUrl">YouTube URL *</label>
+                        <input type="url" id="videoUrl" class="form-control" required>
+                        <small class="form-text">Paste a YouTube video URL</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="videoSubject">Subject *</label>
+                        <select id="videoSubject" class="form-control" required>
+                            <option value="">Select Subject</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="videoDescription">Description</label>
+                        <textarea id="videoDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Video</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/teacher_panel.js"></script>
+</body>
+</html>

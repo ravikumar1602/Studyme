@@ -1,5 +1,5 @@
 // Video Configuration for History Page
-const videoConfig = {
+const videoConfig = window.videoConfig = {
     // Teachers data with their videos
     teachers: [
         {
@@ -906,6 +906,66 @@ const videoConfig = {
         return teacher.videos.find(video => video.id === videoId) || null;
     }
 };
+
+// Create a promise that resolves when videos are loaded
+window.videosLoaded = new Promise(async (resolve) => {
+    try {
+        const response = await fetch('/api/videos.php');
+        const data = await response.json();
+        
+        if (data.success && Array.isArray(data.data)) {
+            // Group videos by subject
+            const apiVideos = {};
+            data.data.forEach(video => {
+                if (!apiVideos[video.subject]) {
+                    apiVideos[video.subject] = [];
+                }
+                
+                // Extract video ID from URL if needed
+                let videoId = video.video_url;
+                if (video.video_url.includes('youtube.com') || video.video_url.includes('youtu.be')) {
+                    const match = video.video_url.match(/(?:youtu\.be\/|v=)([\w-]{11})/);
+                    if (match && match[1]) {
+                        videoId = match[1];
+                    }
+                }
+                
+                // Convert API video format to match our config format
+                const formattedVideo = {
+                    id: video.id || videoId,
+                    title: video.title,
+                    description: video.description || 'No description available',
+                    duration: 'N/A',
+                    views: '0',
+                    date: video.created_at ? new Date(video.created_at).toLocaleDateString() : 'N/A',
+                    thumbnail: video.thumbnail || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+                    video_url: video.video_url,
+                    fromApi: true // Mark as from API
+                };
+                
+                apiVideos[video.subject].push(formattedVideo);
+            });
+            
+            // Add API videos to the appropriate teachers
+            videoConfig.teachers.forEach(teacher => {
+                const subject = teacher.id.split('-')[0]; // Get subject from teacher ID
+                if (apiVideos[subject] && teacher.videos) {
+                    // Add API videos to the beginning of the videos array
+                    teacher.videos = [...apiVideos[subject], ...teacher.videos];
+                }
+            });
+            
+            console.log('Videos loaded from API:', data.data);
+        } else {
+            console.warn('No videos found in API response or invalid format:', data);
+        }
+    } catch (error) {
+        console.error('Error loading videos from API:', error);
+    } finally {
+        // Always resolve the promise, even if there was an error
+        resolve();
+    }
+});
 
 // Make the config available globally
 window.videoConfig = videoConfig;

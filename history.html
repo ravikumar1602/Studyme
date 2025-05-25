@@ -132,7 +132,7 @@
                 </div>
                 
                 <!-- Video List -->
-                <div class="video-grid" id="videoList">
+                <div class="video-list" id="videoList">
                     <!-- Videos will be loaded here -->
                 </div>
             </main>
@@ -159,41 +159,59 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     </script>
 
-    <!-- Video.js -->
+    <!-- Scripts -->
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/3.0.1/Youtube.min.js"></script>
-
-    <!-- Load configuration first -->
-    <script src="js/video-config.js"></script>
-
-    <!-- Load main application script -->
     <script>
-        // Initialize video player when YouTube API is ready
+        // Initialize video configuration
+        window.videoConfig = {
+            teachers: [
+                {
+                    id: 'khan',
+                    name: 'Khan Sir',
+                    subject: 'History'
+                },
+                {
+                    id: 'sarah',
+                    name: 'Sarah Johnson',
+                    subject: 'History'
+                },
+                {
+                    id: 'michael',
+                    name: 'Michael Brown',
+                    subject: 'History'
+                },
+                {
+                    id: 'priya',
+                    name: 'Priya Patel',
+                    subject: 'History'
+                }
+            ]
+        };
+    </script>
+    <script src="js/subjectpage.js"></script>
+    <script>
         function onYouTubeIframeAPIReady() {
             console.log('YouTube API is ready');
+            // Initialize the video player when YouTube API is ready
+            if (typeof window.initializeApp === 'function') {
+                window.initializeApp();
+            }
         }
+
 
         // Initialize the application when the page is loaded
         document.addEventListener('DOMContentLoaded', function () {
             console.log('DOM fully loaded');
-            // Initialize the video player
-            if (typeof initPlayer === 'function') {
-                initPlayer();
-            }
-
-            // Set up teacher handlers
-            if (typeof setupTeacherHandlers === 'function') {
-                setupTeacherHandlers();
-            }
-
-            // Initialize teachers data
-            if (typeof initTeachersData === 'function') {
-                initTeachersData();
+            
+            // If YouTube API is already loaded, initialize the app
+            if (window.YT && window.YT.loaded) {
+                if (typeof window.initializeApp === 'function') {
+                    window.initializeApp();
+                }
             }
         });
     </script>
-
-    <!-- Load subject page scripts -->
-    <script src="js/subjectpage.js"></script>
 </body>
 </html>

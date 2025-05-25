@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Study Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>Study Portal Admin</h1>
+            <nav>
+                <a href="index.html">View Site</a>
+                <a href="#" id="logout">Logout</a>
+            </nav>
+        </header>
+
+        <div class="admin-content">
+            <div class="sidebar">
+                <ul>
+                    <li class="active" data-section="videos"><i class="fas fa-video"></i> Manage Videos</li>
+                    <li data-section="subjects"><i class="fas fa-book"></i> Subjects</li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <div id="videos-section" class="content-section active">
+                    <div class="section-header">
+                        <h2>Manage Videos</h2>
+                        <button id="add-video-btn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add New Video
+                        </button>
+                    </div>
+
+                    <div class="video-form-container" id="video-form-container" style="display: none;">
+                        <h3>Add/Edit Video</h3>
+                        <form id="video-form">
+                            <input type="hidden" id="video-id">
+                            <div class="form-group">
+                                <label for="subject">Subject</label>
+                                <select id="subject" name="subject" required>
+                                    <option value="">Select Subject</option>
+                                    <option value="history">History</option>
+                                    <option value="geography">Geography</option>
+                                    <option value="mathematics">Mathematics</option>
+                                    <option value="science">Science</option>
+                                    <option value="english">English</option>
+                                    <option value="gk">General Knowledge</option>
+                                    <option value="reasoning">Reasoning</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacher">Teacher</label>
+                                <select id="teacher" name="teacher" required>
+                                    <option value="">Select Teacher</option>
+                                    <option value="khan">Khan Sir</option>
+                                    <option value="sarah">Sarah Johnson</option>
+                                    <option value="david">David Miller</option>
+                                    <option value="priya">Priya Sharma</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="video-url">YouTube Video URL</label>
+                                <input type="url" id="video-url" name="videoUrl" required 
+                                       placeholder="https://www.youtube.com/watch?v=...">
+                            </div>
+                            <div class="form-group">
+                                <label for="video-title">Title</label>
+                                <input type="text" id="video-title" name="title" required 
+                                       placeholder="Enter video title">
+                            </div>
+                            <div class="form-group">
+                                <label for="video-description">Description</label>
+                                <textarea id="video-description" name="description" 
+                                          placeholder="Enter video description (optional)"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="video-thumbnail">Thumbnail URL (optional)</label>
+                                <input type="url" id="video-thumbnail" name="thumbnail" 
+                                       placeholder="https://example.com/thumbnail.jpg">
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="cancel-video" class="btn btn-secondary">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Video</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="video-list">
+                        <div class="search-bar">
+                            <input type="text" id="search-videos" placeholder="Search videos...">
+                            <select id="filter-subject">
+                                <option value="">All Subjects</option>
+                                <option value="history">History</option>
+                                <option value="geography">Geography</option>
+                                <option value="mathematics">Mathematics</option>
+                                <option value="science">Science</option>
+                                <option value="english">English</option>
+                                <option value="gk">General Knowledge</option>
+                                <option value="reasoning">Reasoning</option>
+                            </select>
+                            <select id="filter-teacher">
+                                <option value="">All Teachers</option>
+                                <option value="khan">Khan Sir</option>
+                                <option value="sarah">Sarah Johnson</option>
+                                <option value="david">David Miller</option>
+                                <option value="priya">Priya Sharma</option>
+                            </select>
+                        </div>
+                        <div id="videos-list">
+                            <!-- Videos will be loaded here -->
+                            <div class="loading">Loading videos...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="subjects-section" class="content-section">
+                    <h2>Manage Subjects</h2>
+                    <p>Subject management coming soon...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

@@ -44,3 +44,70 @@
     opacity: 1 !important;
     background: #fff !important;
 }
+
+/* Quality Selector Styles */
+.vjs-quality-selector {
+    font-size: 12px;
+    cursor: pointer;
+    width: auto !important;
+    min-width: 48px;
+    text-align: center;
+}
+
+.vjs-quality-selector .vjs-icon-placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+}
+
+.vjs-quality-selector .vjs-icon-placeholder svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.vjs-quality-selector .vjs-menu {
+    width: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 40px;
+    background-color: rgba(43, 51, 63, 0.9);
+    border-radius: 4px;
+    padding: 4px 0;
+    z-index: 10;
+}
+
+.vjs-quality-selector .vjs-menu-content {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.vjs-quality-selector .vjs-menu-item {
+    color: #fff;
+    padding: 6px 12px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.vjs-quality-selector .vjs-menu-item:hover,
+.vjs-quality-selector .vjs-menu-item.vjs-selected {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.vjs-quality-selector .vjs-menu-item.vjs-selected {
+    font-weight: bold;
+}
+
+/* Hide the quality selector on very small screens */
+@media (max-width: 400px) {
+    .vjs-quality-selector {
+        display: none;
+    }
+}
