@@ -675,48 +675,158 @@ const videoConfig = {
                     playlistIndex: 19
                 },
                 {
+                    id: 'a_QGje5ZU94',
+                    title: 'Lecture 11 : \'वेद\' || Ved || History Foundation By Khan Sir',
+                    description: 'Comprehensive analysis of the Vedas by Khan Sir, covering the four main Vedas, their significance, and their role in ancient Indian history and culture.',
+                    duration: '1:30:00',
+                    views: '1.5M',
+                    date: '7 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/a_QGje5ZU94/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 20
+                },
+                {
+                    id: 'Z7mhcvERrvw',
+                    title: 'Lecture 12: वेद Ved Part 02 History Foundation By Khan Sir',
+                    description: 'Continuation of the comprehensive analysis of the Vedas by Khan Sir, exploring deeper aspects of Vedic literature, philosophy, and their significance in ancient Indian history.',
+                    duration: '1:35:00',
+                    views: '1.4M',
+                    date: '7 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/Z7mhcvERrvw/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 21
+                },
+                {
+                    id: 'rSjsP3P7vbk',
+                    title: 'Lecture 13: उपनिषद और महाकाव्य (Upanishads and Epics)',
+                    description: 'Comprehensive analysis of Upanishads and Indian Epics by Khan Sir, covering their philosophical concepts, historical context, and significance in Indian culture and history.',
+                    duration: '1:40:00',
+                    views: '1.3M',
+                    date: '7 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/rSjsP3P7vbk/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 22
+                },
+                {
+                    id: 'FWphDk23AX4',
+                    title: 'Lecture 14: History Foundation Class by Khan Sir',
+                    description: 'Comprehensive history foundation class covering important historical concepts and events, essential for competitive exam preparation.',
+                    duration: '1:35:00',
+                    views: '1.2M',
+                    date: '7 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/FWphDk23AX4/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 23
+                },
+                {
+                    id: 'qac8OAiXF1w',
+                    title: 'Lecture 15: वैदिक काल (Vedic Period)',
+                    description: 'In-depth analysis of the Vedic Period, covering the early and later Vedic ages, society, economy, and religious practices.',
+                    duration: '1:40:00',
+                    views: '1.3M',
+                    date: '7 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/qac8OAiXF1w/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 24
+                },
+                {
+                    id: '5mcHElokRdA',
+                    title: 'Lecture 16: वैदिक काल Part 2 (Vedic Period Part 2)',
+                    description: 'Continuation of the Vedic Period analysis, focusing on political system, social structure, and cultural aspects of the Vedic age.',
+                    duration: '1:38:00',
+                    views: '1.2M',
+                    date: '7 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/5mcHElokRdA/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 25
+                },
+                {
+                    id: '2RmwA8ljwag',
+                    title: 'Lecture 17: History Foundation Class by Khan Sir',
+                    description: 'Important concepts and analysis of historical events, designed to strengthen foundation for competitive examinations.',
+                    duration: '1:32:00',
+                    views: '1.1M',
+                    date: '7 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/2RmwA8ljwag/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 26
+                },
+                {
+                    id: 'cgA_8dErCKI',
+                    title: 'Lecture 18: History Foundation Class by Khan Sir',
+                    description: 'Comprehensive session covering key historical periods and their significance in modern context.',
+                    duration: '1:36:00',
+                    views: '1.0M',
+                    date: '6 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/cgA_8dErCKI/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 27
+                },
+                {
+                    id: 'dlqbXwXPlqs',
+                    title: 'Lecture 19: History Foundation Class by Khan Sir',
+                    description: 'Detailed analysis of important historical events and their impact on modern society.',
+                    duration: '1:34:00',
+                    views: '1.1M',
+                    date: '6 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/dlqbXwXPlqs/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 28
+                },
+                {
+                    id: 'LpydqeHkQDo',
+                    title: 'Lecture 20: History Foundation Class by Khan Sir',
+                    description: 'Final foundation class covering essential historical concepts and exam-oriented preparation strategies.',
+                    duration: '1:37:00',
+                    views: '1.2M',
+                    date: '6 months ago',
+                    thumbnail: 'https://img.youtube.com/vi/LpydqeHkQDo/maxresdefault.jpg',
+                    playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
+                    playlistIndex: 29
+                },
+                {
                     id: 'ROMAN_VIDEO_ID',
-                    title: 'Lecture 11: रोमन सभ्यता (Roman Civilization)',
+                    title: 'Lecture 21: रोमन सभ्यता (Roman Civilization)',
                     description: 'Comprehensive coverage of the Roman Civilization, including its history, governance, architecture, and impact on modern society.',
                     duration: '1:30:00',
                     views: '1.3M',
                     date: '9 months ago',
                     thumbnail: 'https://img.youtube.com/vi/ROMAN_VIDEO_ID/maxresdefault.jpg',
                     playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
-                    playlistIndex: 20
+                    playlistIndex: 30
                 },
                 {
                     id: 'EGYPTIAN_VIDEO_ID',
-                    title: 'Lecture 12: मिस्र की सभ्यता (Egyptian Civilization)',
+                    title: 'Lecture 22: मिस्र की सभ्यता (Egyptian Civilization)',
                     description: 'In-depth analysis of the Ancient Egyptian Civilization, covering its pyramids, pharaohs, religion, and cultural achievements.',
                     duration: '1:28:00',
                     views: '1.4M',
                     date: '8 months ago',
                     thumbnail: 'https://img.youtube.com/vi/EGYPTIAN_VIDEO_ID/maxresdefault.jpg',
                     playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
-                    playlistIndex: 21
+                    playlistIndex: 31
                 },
                 {
                     id: 'PERSIAN_VIDEO_ID',
-                    title: 'Lecture 13: फ़ारस की सभ्यता (Persian Civilization)',
+                    title: 'Lecture 23: फ़ारस की सभ्यता (Persian Civilization)',
                     description: 'Detailed study of the Persian Empire, its administration, culture, and contributions to world civilization.',
                     duration: '1:20:00',
                     views: '1.2M',
                     date: '8 months ago',
                     thumbnail: 'https://img.youtube.com/vi/PERSIAN_VIDEO_ID/maxresdefault.jpg',
                     playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
-                    playlistIndex: 22
+                    playlistIndex: 32
                 },
                 {
                     id: 'SPARTA_VIDEO_ID',
-                    title: 'Lecture 14: स्पार्टा की सभ्यता (Spartan Civilization)',
+                    title: 'Lecture 24: स्पार्टा की सभ्यता (Spartan Civilization)',
                     description: 'Comprehensive analysis of the Spartan society, military system, and its role in ancient Greek history.',
                     duration: '1:22:00',
                     views: '1.1M',
                     date: '7 months ago',
                     thumbnail: 'https://img.youtube.com/vi/SPARTA_VIDEO_ID/maxresdefault.jpg',
                     playlist: 'PL2Li3eVAuCF5wYCN14zMvhL5OZYBoo5RB',
-                    playlistIndex: 23
+                    playlistIndex: 33
                 }
             ]
         },
