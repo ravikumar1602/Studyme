@@ -1,0 +1,46 @@
+/* Disable hover effects on video player */
+.video-js.vjs-youtube .vjs-tech,
+.video-js.vjs-youtube:hover .vjs-tech,
+.video-js.vjs-youtube.vjs-has-started .vjs-tech,
+.video-js.vjs-youtube.vjs-user-inactive.vjs-playing .vjs-tech {
+    pointer-events: none !important;
+}
+
+/* Hide YouTube controls on hover */
+.video-js.vjs-youtube .ytp-chrome-bottom,
+.video-js.vjs-youtube .ytp-chrome-top,
+.video-js.vjs-youtube .ytp-chrome-top-buttons,
+.video-js.vjs-youtube .ytp-show-cards-title,
+.video-js.vjs-youtube .ytp-gradient-top,
+.video-js.vjs-youtube .ytp-gradient-bottom,
+.video-js.vjs-youtube .ytp-chapter-hover-container,
+.video-js.vjs-youtube .ytp-title,
+.video-js.vjs-youtube .ytp-impression-link,
+.video-js.vjs-youtube .ytp-watermark {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Ensure our custom controls are always visible */
+.video-js.vjs-youtube .vjs-control-bar {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Disable hover effects on video thumbnails */
+.video-thumbnail:hover,
+.playlist-thumbnail:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Disable hover effects on playlist items */
+.playlist-item:hover,
+.playlist-item:hover .playlist-play-button {
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    background: #fff !important;
+}
