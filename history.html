@@ -24,8 +24,51 @@
 
     <div class="container">
         <div class="page-layout">
-            <!-- Teacher Panel -->
-            <aside class="teacher-panel">
+            <!-- Mobile Dropdown Button (only visible on mobile) -->
+            <button class="teacher-dropdown-btn" id="teacherDropdownBtn" aria-label="Select teacher">
+                <span>Select Teacher</span>
+                <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+            
+            <!-- Mobile Teacher Panel (hidden on desktop) -->
+            <aside class="teacher-panel mobile-panel" id="mobileTeacherPanel">
+                <h2>Our History Teachers</h2>
+                <ul class="teacher-list" id="mobileTeacherList">
+                    <li class="teacher-item active" data-teacher="khan">
+                        <div class="teacher-avatar">KS</div>
+                        <div class="teacher-info">
+                            <h3>Khan Sir</h3>
+                            <p>Ancient History Expert</p>
+                        </div>
+                    </li>
+                    <li class="teacher-item" data-teacher="sarah">
+                        <div class="teacher-avatar">SJ</div>
+                        <div class="teacher-info">
+                            <h3>Sarah Johnson</h3>
+                            <p>World Wars Specialist</p>
+                        </div>
+                    </li>
+                    <li class="teacher-item" data-teacher="michael">
+                        <div class="teacher-avatar">MB</div>
+                        <div class="teacher-info">
+                            <h3>Michael Brown</h3>
+                            <p>Modern History Professor</p>
+                        </div>
+                    </li>
+                    <li class="teacher-item" data-teacher="priya">
+                        <div class="teacher-avatar">PP</div>
+                        <div class="teacher-info">
+                            <h3>Priya Patel</h3>
+                            <p>Cultural History Expert</p>
+                        </div>
+                    </li>
+                </ul>
+            </aside>
+            
+            <!-- Desktop Teacher Panel (hidden on mobile) -->
+            <aside class="teacher-panel" id="desktopTeacherPanel">
                 <h2>Our History Teachers</h2>
                 <ul class="teacher-list" id="teacherList">
                     <li class="teacher-item active" data-teacher="khan">

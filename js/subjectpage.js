@@ -463,9 +463,126 @@ function playNextVideo(currentVideo) {
     playVideo(nextVideo);
 }
 
+// Toggle teacher panel on mobile
+function setupMobileDropdown() {
+    const dropdownBtn = document.getElementById('teacherDropdownBtn');
+    const mobileTeacherPanel = document.getElementById('mobileTeacherPanel');
+    const desktopTeacherPanel = document.getElementById('desktopTeacherPanel');
+    
+    // Only run this on mobile
+    if (window.innerWidth > 768) return;
+    
+    if (dropdownBtn && mobileTeacherPanel && desktopTeacherPanel) {
+        // Make sure mobile panel is visible and positioned correctly
+        mobileTeacherPanel.style.display = 'block';
+        mobileTeacherPanel.style.position = 'absolute';
+        mobileTeacherPanel.style.top = '100%';
+        mobileTeacherPanel.style.left = '0';
+        
+        // Hide desktop panel on mobile
+        desktopTeacherPanel.style.display = 'none';
+        
+        // Set up click handler for mobile dropdown
+        dropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isActive = this.classList.toggle('active');
+            if (isActive) {
+                mobileTeacherPanel.classList.add('active');
+            } else {
+                mobileTeacherPanel.classList.remove('active');
+            }
+        });
+        
+        // Close dropdown when clicking on a teacher item
+        const teacherItems = mobileTeacherPanel.querySelectorAll('.teacher-item');
+        teacherItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownBtn.classList.remove('active');
+                mobileTeacherPanel.classList.remove('active');
+                // Update the button text
+                const teacherName = this.querySelector('h3').textContent;
+                const buttonText = dropdownBtn.querySelector('span');
+                if (buttonText) {
+                    buttonText.textContent = teacherName;
+                }
+            });
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            if (mobileTeacherPanel.classList.contains('active') && 
+                !mobileTeacherPanel.contains(event.target) && 
+                !dropdownBtn.contains(event.target)) {
+                dropdownBtn.classList.remove('active');
+                mobileTeacherPanel.classList.remove('active');
+            }
+        });
+    }
+}
+
+// Handle window resize to show/hide panels appropriately
+function handleResize() {
+    const mobileTeacherPanel = document.getElementById('mobileTeacherPanel');
+    const desktopTeacherPanel = document.getElementById('desktopTeacherPanel');
+    const dropdownBtn = document.getElementById('teacherDropdownBtn');
+    const videoGrid = document.querySelector('.video-grid');
+    const mainContent = document.querySelector('.main-content');
+    
+    if (window.innerWidth <= 768) {
+        // Mobile view
+        if (desktopTeacherPanel) desktopTeacherPanel.style.display = 'none';
+        if (mobileTeacherPanel) {
+            mobileTeacherPanel.style.display = 'block';
+            mobileTeacherPanel.style.position = 'absolute';
+            mobileTeacherPanel.style.top = '100%';
+            mobileTeacherPanel.style.left = '0';
+            mobileTeacherPanel.style.width = '100%';
+            mobileTeacherPanel.style.zIndex = '1000';
+        }
+        if (dropdownBtn) {
+            dropdownBtn.style.display = 'flex';
+            dropdownBtn.classList.remove('active');
+        }
+        if (mobileTeacherPanel) mobileTeacherPanel.classList.remove('active');
+        if (videoGrid) videoGrid.style.display = 'none';
+        if (mainContent) {
+            mainContent.style.gridColumn = '1';
+            mainContent.style.width = '100%';
+            mainContent.style.padding = '0';
+        }
+    } else {
+        // Desktop/tablet view
+        if (desktopTeacherPanel) desktopTeacherPanel.style.display = 'block';
+        if (mobileTeacherPanel) {
+            mobileTeacherPanel.style.display = 'none';
+            mobileTeacherPanel.classList.remove('active');
+        }
+        if (dropdownBtn) {
+            dropdownBtn.style.display = 'none';
+            dropdownBtn.classList.remove('active');
+        }
+        if (videoGrid) videoGrid.style.display = 'grid';
+        if (mainContent) {
+            mainContent.style.gridColumn = '2';
+            mainContent.style.width = '';
+            mainContent.style.padding = '';
+        }
+    }
+}
+
 // Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM fully loaded');
+    
+    // Set up mobile dropdown
+    setupMobileDropdown();
+    
+    // Set up window resize handler
+    window.addEventListener('resize', handleResize);
+    
+    // Initialize the correct view based on current screen size
+    handleResize();
     
     // Initialize teachers data first
     if (!initTeachersData()) {
