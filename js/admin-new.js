@@ -1,35 +1,37 @@
-// Import Firebase services from the modular SDK
+// Import Firebase services from the modular SDK (version 10.7.1 to match admin.html)
 import { 
     collection, 
     doc, 
     addDoc, 
     updateDoc, 
     deleteDoc, 
-    getDocs, 
+    getDoc,
     query, 
     where, 
     orderBy, 
     onSnapshot,
-    getFirestore
-} from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
-import { 
-    getStorage, 
-    ref, 
-    uploadBytes, 
-    getDownloadURL 
-} from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+    serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-// Get current user from auth
-const getCurrentUser = () => {
-    return new Promise((resolve) => {
-        const auth = getAuth();
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            unsubscribe();
-            resolve(user);
-        });
-    });
-};
+// Get Firestore and Auth instances from window object
+const db = window.db;
+const auth = window.auth;
+
+// DOM Elements
+const videosList = document.getElementById('videosList');
+const videoForm = document.getElementById('videoForm');
+const videoFormModal = new bootstrap.Modal(document.getElementById('videoFormModal'));
+const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+const searchInput = document.getElementById('searchVideos');
+const filterSubject = document.getElementById('filterSubject');
+const addVideoBtn = document.getElementById('addVideoBtn');
+const saveVideoBtn = document.getElementById('saveVideoBtn');
+const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+// State variables
+let currentVideoId = null;
+let videos = [];
+let unsubscribeVideos = null;
 
 // Available subjects with display names
 const SUBJECTS = {
@@ -46,12 +48,377 @@ const SUBJECTS = {
     'current-affairs': 'Current Affairs'
 };
 
-// Admin Dashboard Functionality
-document.addEventListener('DOMContentLoaded', async function() {
+// Extract YouTube video ID from URL
+function extractYouTubeId(url) {
+    if (!url) return '';
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : '';
+}
+
+// Format date
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
+}
+
+// Show notification
+function showNotification(message, type = 'success') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+    alertDiv.role = 'alert';
+    alertDiv.style.zIndex = '9999';
+    
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+    
+    alertDiv.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${icon} me-2"></i>
+            <div>${message}</div>
+            <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.classList.remove('show');
+            setTimeout(() => alertDiv.remove(), 150);
+        }
+    }, 5000);
+}
+
+// Toggle loading state
+function setLoading(button, isLoading) {
+    const spinner = button.querySelector('.spinner-border');
+    const buttonText = button.querySelector('.button-text');
+    
+    if (isLoading) {
+        button.disabled = true;
+        if (spinner) spinner.classList.remove('d-none');
+        if (buttonText) buttonText.textContent = 'Saving...';
+    } else {
+        button.disabled = false;
+        if (spinner) spinner.classList.add('d-none');
+        if (buttonText) buttonText.textContent = 'Save Video';
+    }
+}
+
+// Render videos in the table
+function renderVideos(videosToRender = []) {
+    if (!videosToRender.length) {
+        videosList.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-5">
+                    <i class="fas fa-video-slash fa-2x mb-3 text-muted"></i>
+                    <p class="mb-0">No videos found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    
+    videosList.innerHTML = videosToRender.map(video => {
+        const videoId = extractYouTubeId(video.videoUrl);
+        const thumbnailUrl = video.thumbnailUrl || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+        
+        return `
+            <tr data-id="${video.id}">
+                <td style="width: 120px;">
+                    <img src="${thumbnailUrl}" alt="${video.title}" class="img-thumbnail" style="width: 100px; height: 60px; object-fit: cover;">
+                </td>
+                <td>
+                    <div class="fw-semibold">${video.title}</div>
+                    <small class="text-muted">${video.description?.substring(0, 60)}${video.description?.length > 60 ? '...' : ''}</small>
+                </td>
+                <td>
+                    <span class="badge bg-primary">${SUBJECTS[video.subject] || video.subject}</span>
+                </td>
+                <td>${formatDate(video.createdAt?.toDate())}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary edit-video" data-id="${video.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger delete-video" data-id="${video.id}" data-title="${video.title}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Load videos from Firestore
+function loadVideos() {
+    videosList.innerHTML = `
+        <tr>
+            <td colspan="5" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 mb-0">Loading videos...</p>
+            </td>
+        </tr>
+    `;
+    
+    // Unsubscribe from previous listener if exists
+    if (unsubscribeVideos) {
+        unsubscribeVideos();
+    }
+    
+    const videosRef = collection(db, 'videos');
+    const q = query(videosRef, orderBy('createdAt', 'desc'));
+    
+    unsubscribeVideos = onSnapshot(q, (querySnapshot) => {
+        videos = [];
+        querySnapshot.forEach((doc) => {
+            videos.push({ id: doc.id, ...doc.data() });
+        });
+        
+        renderVideos(videos);
+        setupEventListeners();
+    }, (error) => {
+        console.error('Error loading videos:', error);
+        showNotification('Error loading videos. Please refresh the page.', 'danger');
+    });
+}
+
+// Filter videos based on search and subject
+function filterVideos() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const subjectFilter = filterSubject.value;
+    
+    let filteredVideos = [...videos];
+    
+    if (searchTerm) {
+        filteredVideos = filteredVideos.filter(video => 
+            video.title.toLowerCase().includes(searchTerm) ||
+            (video.description && video.description.toLowerCase().includes(searchTerm)) ||
+            (video.tags && video.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+        );
+    }
+    
+    if (subjectFilter) {
+        filteredVideos = filteredVideos.filter(video => video.subject === subjectFilter);
+    }
+    
+    renderVideos(filteredVideos);
+}
+
+// Show video form for adding/editing
+async function showVideoForm(videoId = null) {
+    const form = document.getElementById('videoForm');
+    form.reset();
+    
+    if (videoId) {
+        // Edit mode
+        document.getElementById('videoModalLabel').textContent = 'Edit Video';
+        document.getElementById('saveVideoBtn').innerHTML = '<span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span> Update Video';
+        
+        try {
+            const videoDoc = await getDoc(doc(db, 'videos', videoId));
+            if (videoDoc.exists()) {
+                const video = { id: videoDoc.id, ...videoDoc.data() };
+                currentVideoId = video.id;
+                
+                // Populate form
+                document.getElementById('videoId').value = video.id;
+                document.getElementById('videoTitle').value = video.title || '';
+                document.getElementById('videoSubject').value = video.subject || '';
+                document.getElementById('videoDescription').value = video.description || '';
+                document.getElementById('videoUrl').value = video.videoUrl || '';
+                document.getElementById('videoThumbnail').value = video.thumbnailUrl || '';
+                document.getElementById('videoTags').value = video.tags ? video.tags.join(', ') : '';
+            }
+        } catch (error) {
+            console.error('Error loading video:', error);
+            showNotification('Error loading video details', 'danger');
+            return;
+        }
+    } else {
+        // Add new mode
+        document.getElementById('videoModalLabel').textContent = 'Add New Video';
+        document.getElementById('saveVideoBtn').innerHTML = '<span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span> Save Video';
+        currentVideoId = null;
+    }
+    
+    videoFormModal.show();
+}
+
+// Handle video form submission
+async function handleVideoSubmit(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const saveButton = form.querySelector('button[type="submit"]');
+    
+    try {
+        setLoading(saveButton, true);
+        
+        const videoData = {
+            title: form.videoTitle.value.trim(),
+            subject: form.videoSubject.value,
+            description: form.videoDescription.value.trim(),
+            videoUrl: form.videoUrl.value.trim(),
+            thumbnailUrl: form.videoThumbnail.value.trim() || null,
+            tags: form.videoTags.value ? form.videoTags.value.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+            updatedAt: serverTimestamp()
+        };
+        
+        if (!currentVideoId) {
+            // Add new video
+            videoData.createdAt = serverTimestamp();
+            await addDoc(collection(db, 'videos'), videoData);
+            showNotification('Video added successfully!');
+        } else {
+            // Update existing video
+            await updateDoc(doc(db, 'videos', currentVideoId), videoData);
+            showNotification('Video updated successfully!');
+        }
+        
+        videoFormModal.hide();
+    } catch (error) {
+        console.error('Error saving video:', error);
+        showNotification('Error saving video. Please try again.', 'danger');
+    } finally {
+        setLoading(saveButton, false);
+    }
+}
+
+// Handle video deletion
+async function handleDeleteVideo(videoId, videoTitle) {
+    if (!videoId) return;
+    
+    document.getElementById('videoToDeleteTitle').textContent = videoTitle || 'this video';
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    
+    // Remove previous event listeners
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    
+    newConfirmBtn.addEventListener('click', async () => {
+        try {
+            const spinner = newConfirmBtn.querySelector('.spinner-border');
+            const buttonText = newConfirmBtn.querySelector('.button-text');
+            
+            if (spinner) spinner.classList.remove('d-none');
+            if (buttonText) buttonText.textContent = 'Deleting...';
+            newConfirmBtn.disabled = true;
+            
+            await deleteDoc(doc(db, 'videos', videoId));
+            
+            modal.hide();
+            showNotification('Video deleted successfully!');
+        } catch (error) {
+            console.error('Error deleting video:', error);
+            showNotification('Error deleting video. Please try again.', 'danger');
+        }
+    });
+    
+    modal.show();
+}
+
+// Set up event listeners
+function setupEventListeners() {
+    // Add video button
+    if (addVideoBtn) {
+        addVideoBtn.addEventListener('click', () => showVideoForm());
+    }
+    
+    // Search input
+    if (searchInput) {
+        searchInput.addEventListener('input', filterVideos);
+    }
+    
+    // Subject filter
+    if (filterSubject) {
+        filterSubject.addEventListener('change', filterVideos);
+    }
+    
+    // Video form submission
+    if (videoForm) {
+        videoForm.addEventListener('submit', handleVideoSubmit);
+    }
+    
+    // Edit and delete buttons
+    document.querySelectorAll('.edit-video').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const videoId = e.currentTarget.dataset.id;
+            showVideoForm(videoId);
+        });
+    });
+    
+    document.querySelectorAll('.delete-video').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const videoId = e.currentTarget.dataset.id;
+            const videoTitle = e.currentTarget.dataset.title;
+            handleDeleteVideo(videoId, videoTitle);
+        });
+    });
+}
+
+// Initialize the admin dashboard
+const initAdmin = async function() {
     console.log('Admin module loaded, checking authentication...');
+    
+    try {
+        // Check if Firebase services are available
+        if (!window.auth || !window.db) {
+            console.error('Firebase services not properly initialized');
+            throw new Error('Authentication service is not available. Please refresh the page.');
+        }
+        
+        // Check if user is authenticated
+        const user = await getCurrentUser();
+        if (!user) {
+            console.log('No user signed in, redirecting to login...');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Load videos
+        loadVideos();
+        
+        // Set up event listeners
+        setupEventListeners();
+        
+        // Set up event delegation for dynamically added elements
+        document.addEventListener('click', (e) => {
+            // Handle edit button clicks on dynamically added elements
+            if (e.target.closest('.edit-video')) {
+                const btn = e.target.closest('.edit-video');
+                const videoId = btn.dataset.id;
+                showVideoForm(videoId);
+            }
+            
+            // Handle delete button clicks on dynamically added elements
+            if (e.target.closest('.delete-video')) {
+                const btn = e.target.closest('.delete-video');
+                const videoId = btn.dataset.id;
+                const videoTitle = btn.dataset.title;
+                handleDeleteVideo(videoId, videoTitle);
+            }
+        });
+        
+        console.log('Admin dashboard initialized');
+    } catch (error) {
+        console.error('Error initializing admin dashboard:', error);
+        showNotification('Error initializing admin dashboard. Please refresh the page.', 'danger');
+        throw error; // Re-throw to be caught by the calling function
+    }
+    
     // Check if user is authenticated
     const user = await getCurrentUser();
     if (!user) {
+        console.log('No user signed in, redirecting to login...');
         window.location.href = 'login.html';
         return;
     }
@@ -81,26 +448,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     let currentFilterSubject = '';
     let currentSearchTerm = '';
 
-    // Initialize Firestore and Storage
-    let db, storage, auth;
-
-    try {
-        // Get the initialized app from window
-        db = getFirestore();
-        storage = getStorage();
-        auth = window.auth; // Get auth from window (set in admin.html)
-        
-        if (!auth) {
-            throw new Error('Authentication service not available');
-        }
-        
-        console.log('Firebase services initialized successfully');
-    } catch (error) {
-        console.error('Error initializing Firebase services:', error);
-        showNotification('Error initializing the application. Please refresh the page.', 'error');
-        throw error;
+    // Get Firebase services from window object
+    const db = window.db;
+    const auth = window.auth;
+    
+    if (!db || !auth) {
+        const errorMsg = 'Firebase services not properly initialized. Please refresh the page.';
+        console.error(errorMsg);
+        showNotification(errorMsg, 'error');
+        throw new Error(errorMsg);
     }
-
+    
+    console.log('Firebase services initialized successfully');
+    
     // Initialize Firestore collection reference
     const videosCollection = collection(db, 'videos');
 
@@ -126,12 +486,47 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Initialize UI components
     function initializeUI() {
         console.log('Initializing UI components...');
-        // Ensure the form is hidden by default
-        if (videoFormContainer) {
-            videoFormContainer.style.display = 'none';
+        
+        try {
+            // Initialize all required DOM elements
+            videoFormContainer = document.getElementById('video-form-container');
+            videoForm = document.getElementById('video-form');
+            videoIdInput = document.getElementById('video-id');
+            videoUrlInput = document.getElementById('video-url');
+            videoTitleInput = document.getElementById('video-title');
+            videoDescriptionInput = document.getElementById('video-description');
+            videoThumbnailInput = document.getElementById('video-thumbnail');
+            subjectSelect = document.getElementById('subject');
+            cancelVideoBtn = document.getElementById('cancel-video-btn');
+            searchInput = document.getElementById('search-videos');
+            subjectFilter = document.getElementById('subject-filter');
+            videosList = document.getElementById('videos-list');
+            sidebarLinks = document.querySelectorAll('.sidebar a[data-section]');
+            contentSections = document.querySelectorAll('.content-section');
+            
+            console.log('UI Elements initialized:', {
+                videoFormContainer: !!videoFormContainer,
+                videoForm: !!videoForm,
+                videoIdInput: !!videoIdInput,
+                videoUrlInput: !!videoUrlInput,
+                videoTitleInput: !!videoTitleInput,
+                subjectSelect: !!subjectSelect
+            });
+            
+            // Ensure the form is hidden by default
+            if (videoFormContainer) {
+                videoFormContainer.style.display = 'none';
+            } else {
+                console.error('Video form container not found in the DOM');
+            }
+            
+            // Set default form values
+            resetForm();
+            
+        } catch (error) {
+            console.error('Error initializing UI components:', error);
+            throw error; // Re-throw to be caught by the outer try-catch
         }
-        // Set default form values
-        resetForm();
     }
 
     // Set up event listeners
@@ -165,23 +560,24 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.warn('Video form not found');
         }
 
-        // Add video button
+        // Add video button - simplified and more reliable approach
         console.log('Setting up add video button...');
         const addVideoBtn = document.getElementById('add-video-btn');
         
         if (addVideoBtn) {
-            console.log('Found add video button');
+            console.log('Found add video button, adding click handler');
             
-            // Create a new button to replace the existing one (avoids duplicate event listeners)
-            const newButton = addVideoBtn.cloneNode(true);
-            addVideoBtn.parentNode.replaceChild(newButton, addVideoBtn);
+            // Remove any existing click handlers first
+            const newBtn = addVideoBtn.cloneNode(true);
+            addVideoBtn.parentNode.replaceChild(newBtn, addVideoBtn);
             
-            // Add click handler with better error handling
-            newButton.addEventListener('click', function handleAddVideoClick(e) {
+            // Add new click handler
+            newBtn.addEventListener('click', function(e) {
                 console.log('Add video button clicked');
+                e.preventDefault();
+                e.stopPropagation();
+                
                 try {
-                    e.preventDefault();
-                    e.stopPropagation();
                     showVideoForm();
                 } catch (error) {
                     console.error('Error in add video click handler:', error);
@@ -189,17 +585,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             });
             
-            // Log button details for debugging
-            console.log('Add video button properties:', {
-                id: newButton.id,
-                classList: Array.from(newButton.classList),
-                parentElement: newButton.parentElement?.tagName,
-                isConnected: newButton.isConnected,
-                disabled: newButton.disabled
-            });
-            
             // Make sure the button is enabled
-            newButton.disabled = false;
+            newBtn.disabled = false;
+            console.log('Add video button setup complete');
         } else {
             console.error('Add video button not found in the DOM');
             showNotification('Error: Could not initialize the Add Video button', 'error');
@@ -272,13 +660,29 @@ document.addEventListener('DOMContentLoaded', async function() {
         isEditMode = !!video;
         
         try {
-            // Ensure the form container is visible
+            console.log('Initializing video form...');
+            
+            // Re-initialize form elements in case they weren't available before
+            if (!videoFormContainer) videoFormContainer = document.getElementById('video-form-container');
+            if (!videoForm) videoForm = document.getElementById('video-form');
+            if (!videoIdInput) videoIdInput = document.getElementById('video-id');
+            if (!videoUrlInput) videoUrlInput = document.getElementById('video-url');
+            if (!videoTitleInput) videoTitleInput = document.getElementById('video-title');
+            if (!videoDescriptionInput) videoDescriptionInput = document.getElementById('video-description');
+            if (!videoThumbnailInput) videoThumbnailInput = document.getElementById('video-thumbnail');
+            if (!subjectSelect) subjectSelect = document.getElementById('subject');
+            
+            console.log('Form elements:', {
+                videoFormContainer: !!videoFormContainer,
+                videoForm: !!videoForm,
+                videoIdInput: !!videoIdInput,
+                videoUrlInput: !!videoUrlInput,
+                videoTitleInput: !!videoTitleInput,
+                subjectSelect: !!subjectSelect
+            });
+            
             if (!videoFormContainer) {
-                console.error('Video form container not found');
-                videoFormContainer = document.getElementById('video-form-container');
-                if (!videoFormContainer) {
-                    throw new Error('Video form container element not found');
-                }
+                throw new Error('Video form container not found in the DOM');
             }
             
             // Set form title
@@ -287,45 +691,55 @@ document.addEventListener('DOMContentLoaded', async function() {
                 formTitle.textContent = isEditMode ? 'Edit Video' : 'Add New Video';
                 console.log('Form title set to:', formTitle.textContent);
             } else {
-                console.error('Form title element not found');
+                console.warn('Form title element not found');
+            }
+            
+            // Reset form first
+            resetForm();
+            
+            // If editing, populate form with video data
+            if (isEditMode) {
+                console.log('Editing existing video:', video);
+                currentEditId = video.id;
+                if (videoIdInput) videoIdInput.value = video.id || '';
+                if (videoUrlInput) videoUrlInput.value = video.url || '';
+                if (videoTitleInput) videoTitleInput.value = video.title || '';
+                if (videoDescriptionInput) videoDescriptionInput.value = video.description || '';
+                if (videoThumbnailInput) videoThumbnailInput.value = video.thumbnail || '';
+                if (subjectSelect) subjectSelect.value = video.subject || '';
+            } else {
+                console.log('Adding new video');
+                currentEditId = null;
             }
             
             // Show the form with animation
+            console.log('Showing video form');
             videoFormContainer.style.display = 'block';
             videoFormContainer.style.opacity = '0';
+            
+            // Force reflow to ensure the transition works
+            void videoFormContainer.offsetHeight;
+            
+            videoFormContainer.style.opacity = '1';
+            videoFormContainer.style.transition = 'opacity 0.3s ease-in-out';
+            
+            // Scroll to form
             setTimeout(() => {
-                videoFormContainer.style.opacity = '1';
-                videoFormContainer.style.transition = 'opacity 0.3s ease-in-out';
-                
-                // Scroll to form
                 videoFormContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+                // Focus first input field
+                const firstInput = videoForm?.querySelector('input:not([type="hidden"]), select');
+                if (firstInput) {
+                    firstInput.focus();
+                } else {
+                    console.warn('Could not find first input field to focus');
+                }
             }, 10);
             
-            // Focus first input field
-            const firstInput = document.querySelector('#video-form input, #video-form select');
-            if (firstInput) firstInput.focus();
-            
         } catch (error) {
-            console.error('Error showing video form:', error);
-            showNotification('Error showing video form. Please check console for details.', 'error');
+            console.error('Error in showVideoForm:', error);
+            showNotification(`Error: ${error.message}. Please check console for details.`, 'error');
         }
-        
-        // If editing, populate form with video data
-        if (isEditMode) {
-            currentEditId = video.id;
-            videoIdInput.value = video.id;
-            videoUrlInput.value = video.url || '';
-            videoTitleInput.value = video.title || '';
-            videoDescriptionInput.value = video.description || '';
-            videoThumbnailInput.value = video.thumbnail || '';
-            subjectSelect.value = video.subject || '';
-        }
-        
-        // Show the form
-        videoFormContainer.style.display = 'block';
-        
-        // Scroll to form
-        videoFormContainer.scrollIntoView({ behavior: 'smooth' });
     }
 
     // Reset the video form
@@ -341,24 +755,60 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function handleVideoSubmit(e) {
         e.preventDefault();
         
+        // Validate form
+        if (!videoUrlInput.value.trim()) {
+            showNotification('Please enter a YouTube video URL', 'error');
+            videoUrlInput.focus();
+            return;
+        }
+        
+        if (!videoTitleInput.value.trim()) {
+            showNotification('Please enter a video title', 'error');
+            videoTitleInput.focus();
+            return;
+        }
+        
+        if (!subjectSelect.value) {
+            showNotification('Please select a subject', 'error');
+            subjectSelect.focus();
+            return;
+        }
+        
+        // Extract YouTube video ID
+        const youtubeId = extractYouTubeId(videoUrlInput.value.trim());
+        if (!youtubeId) {
+            showNotification('Please enter a valid YouTube URL', 'error');
+            videoUrlInput.focus();
+            return;
+        }
+        
         // Get form values
         const videoData = {
-            url: videoUrlInput.value.trim(),
+            url: `https://www.youtube.com/watch?v=${youtubeId}`,
             title: videoTitleInput.value.trim(),
             description: videoDescriptionInput.value.trim(),
-            thumbnail: videoThumbnailInput.value.trim(),
+            thumbnail: videoThumbnailInput.value.trim() || `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`,
             subject: subjectSelect.value,
-            createdAt: serverTimestamp(),
+            youtubeId: youtubeId,
+            createdAt: isEditMode ? undefined : serverTimestamp(),
             updatedAt: serverTimestamp()
         };
         
         try {
+            // Show loading state
+            const submitBtn = videoForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            
             if (isEditMode && currentEditId) {
                 // Update existing video
                 await updateVideo(videoData);
+                showNotification('Video updated successfully!', 'success');
             } else {
                 // Add new video
                 await addVideo(videoData);
+                showNotification('Video added successfully!', 'success');
             }
             
             // Reset form
@@ -366,15 +816,26 @@ document.addEventListener('DOMContentLoaded', async function() {
             
         } catch (error) {
             console.error('Error saving video:', error);
-            showNotification('Failed to save video. Please try again.', 'error');
+            showNotification(`Failed to save video: ${error.message}`, 'error');
+        } finally {
+            // Reset button state
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
         }
     }
 
     // Extract YouTube video ID from URL
     function extractYouTubeId(url) {
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
+        try {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        } catch (error) {
+            console.error('Error extracting YouTube ID:', error);
+            return null;
+        }
     }
 
     // Load videos from Firestore
@@ -505,50 +966,55 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </span>
                     </div>
                 </div>
-                <div class="video-actions">
-                    <button class="btn btn-edit" data-id="${video.id}" title="Edit video">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-delete" data-id="${video.id}" title="Delete video">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                }
+                
+                // Reset form
+                resetForm();
+                
+            } catch (error) {
+                console.error('Error saving video:', error);
+                showNotification(`Failed to save video: ${error.message}`, 'error');
+            } finally {
+                // Reset button state
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error initializing admin dashboard:', error);
+        showNotification('Error initializing admin dashboard. Please refresh the page.', 'danger');
+        throw error; // Re-throw to be caught by the calling function
+    }
+};
+
+// Export the initAdmin function
+export { initAdmin };
+
+// Initialize the admin dashboard when the DOM is loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAdmin);
+} else {
+    initializeAdmin();
+}
+
+async function initializeAdmin() {
+    try {
+        await initAdmin();
+    } catch (error) {
+        console.error('Error initializing admin:', error);
+        // Show error to user if needed
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) {
+            mainContent.innerHTML = `
+                <div class="alert alert-danger m-4">
+                    <h4 class="alert-heading">Error Initializing Admin</h4>
+                    <p>There was an error initializing the admin interface. Please try refreshing the page.</p>
+                    <hr>
+                    <p class="mb-0">${error.message || 'Unknown error occurred'}</p>
                 </div>
             `;
-            videoList.appendChild(videoElement);
-        });
-        
-        // Add event listeners to edit and delete buttons
-        document.querySelectorAll('.btn-edit').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const videoId = e.currentTarget.getAttribute('data-id');
-                const video = videos.find(v => v.id === videoId);
-                if (video) showVideoForm(video);
-            });
-        });
-        
-        document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const videoId = e.currentTarget.getAttribute('data-id');
-                if (confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
-                    deleteVideo(videoId);
-                }
-            });
-        });
+        }
     }
-
-    // Helper function to format date
-    function formatDate(date) {
-        if (!date) return '';
-        const options = { year: 'numeric', month: 'short', day: 'numeric' };
-        return date.toLocaleDateString('en-US', options);
-    }
-
-    // Show notification
-    function showNotification(message, type = 'success') {
-        // You can implement a notification system here
-        alert(`${type.toUpperCase()}: ${message}`);
-    }
-    
-    // Initialize the admin dashboard
-    initAdmin();
-});
+}
