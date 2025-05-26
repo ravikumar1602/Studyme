@@ -162,7 +162,24 @@
     </div>
 
     <script type="module">
-        import { signIn } from './js/firebase.js';
+        // Import Firebase auth functions directly
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+        import { firebaseConfig } from './js/firebase-config.js';
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        // Sign in function
+        const signIn = async (email, password) => {
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                return { user: userCredential.user, error: null };
+            } catch (error) {
+                return { user: null, error: error.message };
+            }
+        };
         
         const loginForm = document.getElementById('loginForm');
         const emailInput = document.getElementById('email');

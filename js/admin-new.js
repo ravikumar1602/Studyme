@@ -18,7 +18,18 @@ import {
     uploadBytes, 
     getDownloadURL 
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js';
-import { getCurrentUser } from './firebase.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+
+// Get current user from auth
+const getCurrentUser = () => {
+    return new Promise((resolve) => {
+        const auth = getAuth();
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            unsubscribe();
+            resolve(user);
+        });
+    });
+};
 
 // Available subjects with display names
 const SUBJECTS = {
@@ -37,6 +48,7 @@ const SUBJECTS = {
 
 // Admin Dashboard Functionality
 document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Admin module loaded, checking authentication...');
     // Check if user is authenticated
     const user = await getCurrentUser();
     if (!user) {

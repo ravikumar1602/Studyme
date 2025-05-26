@@ -145,33 +145,79 @@
         </div>
     </div>
 
-    <!-- Admin JS -->
+    <!-- Firebase Auth Check -->
     <script type="module">
-        console.log('Admin script loading...');
+        console.log('Initializing Firebase authentication...');
         
         // Import Firebase config and auth functions
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
-        import { getAuth, signOut as firebaseSignOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+        import { getAuth, onAuthStateChanged, signOut as firebaseSignOut } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
         import { firebaseConfig } from './js/firebase-config.js';
         
         // Initialize Firebase
-        let app, db, auth;
-        
         try {
             console.log('Initializing Firebase...');
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            console.log('Firebase initialized successfully');
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
             
             // Make auth available globally for admin-new.js
             window.auth = auth;
+            console.log('Firebase initialized successfully');
+            
+            // Check auth state immediately
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    console.log('User not authenticated, redirecting to login...');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                console.log('User authenticated, initializing admin interface...');
+                await initializeAdminInterface(auth);
+            });
             
         } catch (error) {
             console.error('Firebase initialization error:', error);
-            alert('Failed to initialize Firebase. Please check console for details.');
+            document.body.innerHTML = `
+                <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+                    <h2>Error Initializing Application</h2>
+                    <p>Failed to initialize the application. Please check the console for details.</p>
+                    <p><a href="login.html">Return to Login</a></p>
+                </div>
+            `;
             throw error;
+        }
+        
+        async function initializeAdminInterface(auth) {
+            try {
+                // Import admin module
+                const adminModule = await import('./js/admin-new.js');
+                console.log('Admin module loaded successfully');
+                
+                // Set up logout button if it exists
+                const logoutBtn = document.getElementById('logout');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        try {
+                            await firebaseSignOut(auth);
+                            window.location.href = 'login.html';
+                        } catch (error) {
+                            console.error('Error during sign out:', error);
+                            alert('Error signing out. Please try again.');
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error initializing admin interface:', error);
+                document.body.innerHTML = `
+                    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+                        <h2>Error Loading Admin Interface</h2>
+                        <p>Failed to load the admin interface. Please check the console for details.</p>
+                        <p><a href="login.html">Return to Login</a></p>
+                    </div>
+                `;
+            }
         }
         
         // Auth helper functions
