@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Study Portal</title>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css">
 </head>
@@ -41,14 +43,18 @@
                             <div class="form-group">
                                 <label for="subject">Subject</label>
                                 <select id="subject" name="subject" required>
-                                    <option value="">Select Subject</option>
-                                    <option value="history">History</option>
-                                    <option value="geography">Geography</option>
-                                    <option value="mathematics">Mathematics</option>
-                                    <option value="science">Science</option>
-                                    <option value="english">English</option>
-                                    <option value="gk">General Knowledge</option>
-                                    <option value="reasoning">Reasoning</option>
+                                <option value="">Select Subject</option>
+                                <option value="history">History</option>
+                                <option value="geography">Geography</option>
+                                <option value="mathematics">Mathematics</option>
+                                <option value="science">Science</option>
+                                <option value="english">English</option>
+                                <option value="gk">General Knowledge</option>
+                                <option value="reasoning">Reasoning</option>
+                                <option value="polity">Polity</option>
+                                <option value="economics">Economics</option>
+                                <option value="environment">Environment</option>
+                                <option value="current-affairs">Current Affairs</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -89,10 +95,25 @@
                     </div>
 
                     <div class="video-list">
-                        <div class="search-bar">
-                            <input type="text" id="search-videos" placeholder="Search videos...">
-                            <select id="filter-subject">
-                                <option value="">All Subjects</option>
+                        <div class="filters">
+                            <div class="search-bar">
+                                <input type="text" id="search-videos" placeholder="Search videos...">
+                            </div>
+                            <div class="filter-group">
+                                <label for="filter-subject">Filter by Subject:</label>
+                                <select id="filter-subject">
+                                    <option value="">All Subjects</option>
+                                    <option value="history">History</option>
+                                    <option value="geography">Geography</option>
+                                    <option value="mathematics">Mathematics</option>
+                                    <option value="science">Science</option>
+                                    <option value="english">English</option>
+                                    <option value="gk">General Knowledge</option>
+                                    <option value="reasoning">Reasoning</option>
+                                    <option value="polity">Polity</option>
+                                    <option value="economics">Economics</option>
+                                    <option value="environment">Environment</option>
+                                    <option value="current-affairs">Current Affairs</option>
                                 <option value="history">History</option>
                                 <option value="geography">Geography</option>
                                 <option value="mathematics">Mathematics</option>
@@ -124,7 +145,110 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="js/admin.js"></script>
+    <!-- Admin JS -->
+    <script type="module">
+        console.log('Admin script loading...');
+        
+        // Import Firebase config and auth functions
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+        import { getAuth, signOut as firebaseSignOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+        import { firebaseConfig } from './js/firebase-config.js';
+        
+        // Initialize Firebase
+        let app, db, auth;
+        
+        try {
+            console.log('Initializing Firebase...');
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            console.log('Firebase initialized successfully');
+            
+            // Make auth available globally for admin-new.js
+            window.auth = auth;
+            
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+            alert('Failed to initialize Firebase. Please check console for details.');
+            throw error;
+        }
+        
+        // Auth helper functions
+        const getCurrentUser = () => {
+            return new Promise((resolve) => {
+                const unsubscribe = onAuthStateChanged(auth, (user) => {
+                    unsubscribe();
+                    resolve(user);
+                });
+            });
+        };
+        
+        const signOut = async () => {
+            try {
+                await firebaseSignOut(auth);
+                return { error: null };
+            } catch (error) {
+                console.error('Sign out error:', error);
+                return { error: error.message };
+            }
+        };
+        
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM fully loaded, checking authentication...');
+            
+            try {
+                // Check if user is authenticated
+                const user = await getCurrentUser();
+                if (!user) {
+                    console.log('User not authenticated, redirecting to login...');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                console.log('User authenticated, loading admin module...');
+                
+                // Import and initialize admin script
+                const adminModule = await import('./js/admin-new.js');
+                console.log('Admin module loaded successfully');
+                
+                // Handle logout
+                const logoutBtn = document.getElementById('logout');
+                if (logoutBtn) {
+                    console.log('Setting up logout button...');
+                    logoutBtn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        console.log('Logout button clicked');
+                        try {
+                            const { error } = await signOut();
+                            if (!error) {
+                                window.location.href = 'login.html';
+                            } else {
+                                throw new Error(error);
+                            }
+                        } catch (error) {
+                            console.error('Error during sign out:', error);
+                            alert('Error signing out. Please try again.');
+                        }
+                    });
+                } else {
+                    console.warn('Logout button not found');
+                }
+                
+            } catch (error) {
+                console.error('Error in admin initialization:', error);
+                // Show error to user
+                alert('Error initializing admin panel. Please check console for details.');
+            }
+        });
+        
+        // Log any unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+        });
+        
+        console.log('Admin script loaded successfully');
+    </script>
 </body>
 </html>

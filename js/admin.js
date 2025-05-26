@@ -1,5 +1,45 @@
+// Import Firebase services from the modular SDK
+import { 
+    collection, 
+    doc, 
+    addDoc, 
+    updateDoc, 
+    deleteDoc, 
+    onSnapshot, 
+    query, 
+    orderBy, 
+    serverTimestamp,
+    Timestamp
+} from 'firebase/firestore';
+import { db, getCurrentUser } from './firebase.js';
+
+// Available subjects with display names
+const SUBJECTS = {
+    'history': 'History',
+    'geography': 'Geography',
+    'mathematics': 'Mathematics',
+    'science': 'Science',
+    'english': 'English',
+    'gk': 'General Knowledge',
+    'reasoning': 'Reasoning',
+    'polity': 'Polity',
+    'economics': 'Economics',
+    'environment': 'Environment',
+    'current-affairs': 'Current Affairs'
+};
+
 // Admin Dashboard Functionality
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Check if user is authenticated
+    const user = await getCurrentUser();
+    if (!user) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // Initialize Firestore collection reference
+    const videosCollection = collection(db, 'videos');
+    
     // DOM Elements
     const sidebarLinks = document.querySelectorAll('.sidebar li');
     const contentSections = document.querySelectorAll('.content-section');
@@ -10,19 +50,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const videoList = document.getElementById('videos-list');
     const searchInput = document.getElementById('search-videos');
     const subjectFilter = document.getElementById('filter-subject');
-    const teacherFilter = document.getElementById('filter-teacher');
     const videoUrlInput = document.getElementById('video-url');
     const videoTitleInput = document.getElementById('video-title');
     const videoDescriptionInput = document.getElementById('video-description');
     const videoThumbnailInput = document.getElementById('video-thumbnail');
     const videoIdInput = document.getElementById('video-id');
     const subjectSelect = document.getElementById('subject');
-    const teacherSelect = document.getElementById('teacher');
     
-    // Sample data - In a real app, this would come from a server
+    // State
     let videos = [];
     let isEditMode = false;
+    let currentFilterSubject = '';
+    let currentSearchTerm = '';
     let currentEditId = null;
+    let unsubscribeVideos = null;
 
     // Initialize the admin dashboard
     function initAdmin() {
@@ -214,42 +255,55 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Load videos from the API
-    async function loadVideos() {
+    // Load videos from Firestore
+    function loadVideos() {
         try {
-            const response = await fetch('/api/videos.php');
-            if (!response.ok) {
-                throw new Error('Failed to fetch videos');
+            // Unsubscribe from previous listener if it exists
+            if (unsubscribeVideos) {
+                unsubscribeVideos();
             }
-            const data = await response.json();
-            videos = Array.isArray(data) ? data : [];
-            renderVideos(videos);
+
+            // Set up real-time listener for videos
+            const videosQuery = query(videosCollection, orderBy('createdAt', 'desc'));
+            
+            unsubscribeVideos = onSnapshot(videosQuery, 
+                (snapshot) => {
+                    videos = [];
+                    snapshot.forEach((doc) => {
+                        videos.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    renderVideos(videos);
+                },
+                (error) => {
+                    console.error('Error loading videos:', error);
+                    showNotification('Failed to load videos. Please try again.', 'error');
+                }
+            );
         } catch (error) {
-            console.error('Error loading videos:', error);
+            console.error('Error setting up video listener:', error);
             showNotification('Failed to load videos. Please try again.', 'error');
         }
     }
     
-    // Add a new video
+    // Add a new video to Firestore
     async function addVideo(video) {
         try {
-            const response = await fetch('/api/videos.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(video)
-            });
+            // Add timestamps
+            const videoWithTimestamp = {
+                ...video,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            };
+
+            // Add to Firestore
+            const docRef = await addDoc(videosCollection, videoWithTimestamp);
             
-            if (!response.ok) {
-                throw new Error('Failed to add video');
-            }
-            
-            const newVideo = await response.json();
-            videos.unshift(newVideo);
-            renderVideos(videos);
+            // The real-time listener will handle updating the UI
             showNotification('Video added successfully!', 'success');
-            return newVideo;
+            return { id: docRef.id, ...videoWithTimestamp };
         } catch (error) {
             console.error('Error adding video:', error);
             showNotification('Failed to add video. Please try again.', 'error');
@@ -257,29 +311,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Update an existing video
+    // Update an existing video in Firestore
     async function updateVideo(updatedVideo) {
         try {
-            const response = await fetch(`/api/videos.php?id=${updatedVideo.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updatedVideo)
-            });
+            // Update timestamp
+            const videoWithTimestamp = {
+                ...updatedVideo,
+                updatedAt: serverTimestamp()
+            };
+
+            // Update in Firestore
+            const videoRef = doc(db, 'videos', currentEditId);
+            await updateDoc(videoRef, videoWithTimestamp);
             
-            if (!response.ok) {
-                throw new Error('Failed to update video');
-            }
-            
-            const updated = await response.json();
-            const index = videos.findIndex(v => v.id === updatedVideo.id);
-            if (index !== -1) {
-                videos[index] = updated;
-                renderVideos(videos);
-                showNotification('Video updated successfully!', 'success');
-            }
-            return updated;
+            // The real-time listener will handle updating the UI
+            showNotification('Video updated successfully!', 'success');
+            return { id: currentEditId, ...videoWithTimestamp };
         } catch (error) {
             console.error('Error updating video:', error);
             showNotification('Failed to update video. Please try again.', 'error');
@@ -287,23 +334,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Delete a video
+    // Delete a video from Firestore
     async function deleteVideo(id) {
         if (!confirm('Are you sure you want to delete this video?')) {
             return;
         }
         
         try {
-            const response = await fetch(`/api/videos.php?id=${id}`, {
-                method: 'DELETE'
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to delete video');
-            }
-            
-            videos = videos.filter(video => video.id !== id);
-            renderVideos(videos);
+            const videoRef = doc(db, 'videos', id);
+            await deleteDoc(videoRef);
+            // The real-time listener will handle updating the UI
             showNotification('Video deleted successfully!', 'success');
         } catch (error) {
             console.error('Error deleting video:', error);
@@ -370,34 +410,36 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const videoId = btn.getAttribute('data-id');
-                deleteVideo(videoId);
-            });
-        });
     }
-    
-    // Filter videos based on search, subject, and teacher filters
-    function filterVideos() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const subjectFilterValue = subjectFilter ? subjectFilter.value.toLowerCase() : '';
-        const teacherFilterValue = teacherFilter ? teacherFilter.value : '';
+}
+
+// Update an existing video in Firestore
+async function updateVideo(updatedVideo) {
+    try {
+        // Update timestamp
+        const videoWithTimestamp = {
+            ...updatedVideo,
+            updatedAt: serverTimestamp()
+        };
+
+        // Update in Firestore
+        const videoRef = doc(db, 'videos', currentEditId);
+        await updateDoc(videoRef, videoWithTimestamp);
         
-        const filteredVideos = videos.filter(video => {
-            const matchesSearch = video.title.toLowerCase().includes(searchTerm) || 
-                               (video.description && video.description.toLowerCase().includes(searchTerm));
-            const matchesSubject = !subjectFilterValue || 
-                                 (video.subject && video.subject.toLowerCase() === subjectFilterValue);
-            const matchesTeacher = !teacherFilterValue || 
-                                 (video.teacher && video.teacher === teacherFilterValue);
-            
-            return matchesSearch && matchesSubject && matchesTeacher;
-        });
-        
-        renderVideos(filteredVideos);
+        // The real-time listener will handle updating the UI
+        showNotification('Video updated successfully!', 'success');
+        return { id: currentEditId, ...videoWithTimestamp };
+    } catch (error) {
+        console.error('Error updating video:', error);
+        showNotification('Failed to update video. Please try again.', 'error');
+        throw error;
     }
-    
-    // Helper function to format date
-    function formatDate(dateString) {
-        if (!dateString) return '';
+}
+
+// Delete a video from Firestore
+async function deleteVideo(id) {
+    if (!confirm('Are you sure you want to delete this video?')) {
+        return;
         const options = { year: 'numeric', month: 'short', day: 'numeric' };
         return new Date(dateString).toLocaleDateString('en-US', options);
     }

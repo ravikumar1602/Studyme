@@ -179,13 +179,47 @@ body {
     transform: translateY(-1px);
 }
 
+/* Filters */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: flex-end;
+}
+
+.search-bar {
+    flex: 1;
+    min-width: 250px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+}
+
+.filter-group label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.filter-group select,
+.filter-group input[type="text"] {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
 /* Forms */
 .video-form-container {
     background-color: #fff;
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 2rem;
     margin-bottom: 2rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
 }
 
 .video-form-container h3 {
@@ -237,6 +271,31 @@ body {
     gap: 1rem;
     margin-top: 1.5rem;
 }
+
+/* Subject Badges */
+.subject-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Subject Colors */
+.badge-history { background-color: #e3f2fd; color: #1565c0; }
+.badge-geography { background-color: #e8f5e9; color: #2e7d32; }
+.badge-mathematics { background-color: #f3e5f5; color: #7b1fa2; }
+.badge-science { background-color: #fff3e0; color: #e65100; }
+.badge-english { background-color: #e8eaf6; color: #303f9f; }
+.badge-gk { background-color: #e0f7fa; color: #006064; }
+.badge-reasoning { background-color: #f3e5f5; color: #8e24aa; }
+.badge-polity { background-color: #e8f5e9; color: #1b5e20; }
+.badge-economics { background-color: #fff8e1; color: #ff8f00; }
+.badge-environment { background-color: #e8f5e9; color: #2e7d32; }
+.badge-current-affairs { background-color: #f3e5f5; color: #6a1b9a; }
 
 /* Video List */
 .video-list {

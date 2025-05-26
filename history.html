@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>History Videos - StudyZone</title>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/subjectpage.css">
     <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
     <link href="css/youtube-override.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/3.0.1/Youtube.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <!-- Header will be loaded here -->
@@ -25,83 +28,59 @@
 
     <div class="container">
         <div class="page-layout">
-            <!-- Mobile Dropdown Button (only visible on mobile) -->
-            <button class="teacher-dropdown-btn" id="teacherDropdownBtn" aria-label="Select teacher">
-                <span>Select Teacher</span>
-                <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
+            <!-- Teacher Panel - Single Responsive Version -->
+            <aside class="teacher-panel" id="teacherPanel">
+                <div class="panel-header">
+                    <h2>Our History Teachers</h2>
+                    <button class="close-panel" id="closeTeacherPanel" aria-label="Close teacher panel">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="panel-content">
+                    <div class="teacher-search">
+                        <input type="text" id="teacherSearch" placeholder="Search teachers...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <ul class="teacher-list" id="teacherList">
+                        <li class="teacher-item" data-teacher="all">
+                            <div class="teacher-avatar">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="teacher-info">
+                                <h3>All Teachers</h3>
+                                <p>View all available lectures</p>
+                            </div>
+                        </li>
+                        <li class="teacher-item" data-teacher="khan">
+                            <div class="teacher-avatar">KS</div>
+                            <div class="teacher-info">
+                                <h3>Khan Sir</h3>
+                                <p>Ancient History Expert</p>
+                            </div>
+                        </li>
+                        <li class="teacher-item" data-teacher="sarah">
+                            <div class="teacher-avatar">SJ</div>
+                            <div class="teacher-info">
+                                <h3>Sarah Johnson</h3>
+                                <p>World Wars Specialist</p>
+                            </div>
+                        </li>
+                        <li class="teacher-item" data-teacher="michael">
+                            <div class="teacher-avatar">MB</div>
+                            <div class="teacher-info">
+                                <h3>Michael Brown</h3>
+                                <p>Modern History Professor</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+            
+            <!-- Mobile Menu Toggle Button -->
+            <button class="menu-toggle" id="teacherPanelToggle">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <span>Teachers</span>
             </button>
-            
-            <!-- Mobile Teacher Panel (hidden on desktop) -->
-            <aside class="teacher-panel mobile-panel" id="mobileTeacherPanel">
-                <h2>Our History Teachers</h2>
-                <ul class="teacher-list" id="mobileTeacherList">
-                    <li class="teacher-item active" data-teacher="khan">
-                        <div class="teacher-avatar">KS</div>
-                        <div class="teacher-info">
-                            <h3>Khan Sir</h3>
-                            <p>Ancient History Expert</p>
-                        </div>
-                    </li>
-                    <li class="teacher-item" data-teacher="sarah">
-                        <div class="teacher-avatar">SJ</div>
-                        <div class="teacher-info">
-                            <h3>Sarah Johnson</h3>
-                            <p>World Wars Specialist</p>
-                        </div>
-                    </li>
-                    <li class="teacher-item" data-teacher="michael">
-                        <div class="teacher-avatar">MB</div>
-                        <div class="teacher-info">
-                            <h3>Michael Brown</h3>
-                            <p>Modern History Professor</p>
-                        </div>
-                    </li>
-                    <li class="teacher-item" data-teacher="priya">
-                        <div class="teacher-avatar">PP</div>
-                        <div class="teacher-info">
-                            <h3>Priya Patel</h3>
-                            <p>Cultural History Expert</p>
-                        </div>
-                    </li>
-                </ul>
-            </aside>
-            
-            <!-- Desktop Teacher Panel (hidden on mobile) -->
-            <aside class="teacher-panel" id="desktopTeacherPanel">
-                <h2>Our History Teachers</h2>
-                <ul class="teacher-list" id="teacherList">
-                    <li class="teacher-item active" data-teacher="khan">
-                        <div class="teacher-avatar">KS</div>
-                        <div class="teacher-info">
-                            <h3>Khan Sir</h3>
-                            <p>Ancient History Expert</p>
-                        </div>
-                    </li>
-                    <li class="teacher-item" data-teacher="sarah">
-                        <div class="teacher-avatar">SJ</div>
-                        <div class="teacher-info">
-                            <h3>Sarah Johnson</h3>
-                            <p>World Wars Specialist</p>
-                        </div>
-                    </li>
-                    <li class="teacher-item" data-teacher="michael">
-                        <div class="teacher-avatar">MB</div>
-                        <div class="teacher-info">
-                            <h3>Michael Brown</h3>
-                            <p>Modern History Professor</p>
-                        </div>
-                    </li>
-                    <li class="teacher-item" data-teacher="priya">
-                        <div class="teacher-avatar">PP</div>
-                        <div class="teacher-info">
-                            <h3>Priya Patel</h3>
-                            <p>Cultural History Expert</p>
-                        </div>
-                    </li>
-                </ul>
-            </aside>
 
             <!-- Main Content -->
             <main class="main-content">
@@ -114,27 +93,26 @@
                             <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
                         </p>
                     </video>
+                    <div class="video-info">
+                        <h2 class="video-title">Select a video to start watching</h2>
+                        <p class="video-description">Choose a video from the list to begin learning</p>
+                    </div>
                 </div>
 
-                <!-- Video Info -->
-                <div class="video-info">
-                    <h2 id="videoTitle">Select a video to start watching</h2>
-                    <div class="video-meta">
-                        <span id="videoDuration">-</span>
-                        <span>•</span>
-                        <span id="videoViews">- views</span>
-                        <span>•</span>
-                        <span id="videoDate">-</span>
-                    </div>
-                    <p class="video-description" id="videoDescription">
-                        Choose a teacher from the left panel to browse their collection of history lectures.
-                    </p>
-                </div>
-                
                 <!-- Video List -->
-                <div class="video-list" id="videoList">
-                    <!-- Videos will be loaded here -->
-                </div>
+                <aside class="video-sidebar" id="videoSidebar">
+                    <div class="video-search">
+                        <input type="text" id="videoSearch" placeholder="Search videos...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="video-list" id="videoList">
+                        <!-- Videos will be loaded here -->
+                        <div class="loading" id="loadingIndicator">
+                            <div class="spinner"></div>
+                            <p>Loading videos...</p>
+                        </div>
+                    </div>
+                </aside>
             </main>
             
             <!-- Playlist Panel -->
@@ -161,57 +139,27 @@
 
     <!-- Scripts -->
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-    <script src="https://www.youtube.com/iframe_api"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/3.0.1/Youtube.min.js"></script>
-    <script>
-        // Initialize video configuration
-        window.videoConfig = {
-            teachers: [
-                {
-                    id: 'khan',
-                    name: 'Khan Sir',
-                    subject: 'History'
-                },
-                {
-                    id: 'sarah',
-                    name: 'Sarah Johnson',
-                    subject: 'History'
-                },
-                {
-                    id: 'michael',
-                    name: 'Michael Brown',
-                    subject: 'History'
-                },
-                {
-                    id: 'priya',
-                    name: 'Priya Patel',
-                    subject: 'History'
-                }
-            ]
-        };
+    
+    <!-- Firebase SDK -->
+    <script type="importmap">
+    {
+        "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"
+        }
+    }
     </script>
-    <script src="js/subjectpage.js"></script>
+    
+    <!-- YouTube API -->
     <script>
         function onYouTubeIframeAPIReady() {
-            console.log('YouTube API is ready');
-            // Initialize the video player when YouTube API is ready
-            if (typeof window.initializeApp === 'function') {
-                window.initializeApp();
-            }
+            console.log('YouTube IFrame API is ready');
         }
-
-
-        // Initialize the application when the page is loaded
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('DOM fully loaded');
-            
-            // If YouTube API is already loaded, initialize the app
-            if (window.YT && window.YT.loaded) {
-                if (typeof window.initializeApp === 'function') {
-                    window.initializeApp();
-                }
-            }
-        });
     </script>
+    
+    <!-- Main App -->
+    <script type="module" src="js/history.js"></script>
 </body>
 </html>
