@@ -322,8 +322,8 @@ function initHistoryPage() {
                         }
                     });
                     
-                    // Sort videos by creation date (newest first)
-                    videos.sort((a, b) => b.createdAt - a.createdAt);
+                    // Sort videos by creation date (oldest first)
+                    videos.sort((a, b) => a.createdAt - b.createdAt);
                     
                     console.log('Rendering', videos.length, 'Khan Sir videos');
                     renderVideos(videos);
@@ -499,15 +499,61 @@ function initHistoryPage() {
     
     // Play the selected video
     window.playVideo = async function(video) {
-        if (!video || !video.id) return;
+        // Validate input
+        if (!video) {
+            console.error('No video object provided');
+            return;
+        }
+        
+        if (!video.id) {
+            console.error('Video ID is missing', video);
+            return;
+        }
         
         console.log('Playing video:', video);
         
+        // Get DOM elements
+        const videoContainer = document.querySelector('.video-container');
+        const videoElement = document.getElementById('videoPlayer');
+        
+        if (!videoContainer) {
+            console.error('Video container not found');
+            return;
+        }
+        
+        if (!videoElement) {
+            console.error('Video element not found');
+            return;
+        }
+        
         try {
-            // Update video info
-            const videoTitle = document.querySelector('.video-title');
-            const videoDescription = document.querySelector('.video-description');
+            // Show loading state
+            console.log('Showing loading state');
+            videoContainer.classList.add('loading');
+            videoElement.style.opacity = '0';
             
+            // Update video info
+            let videoTitle = document.querySelector('.video-title');
+            let videoDescription = document.querySelector('.video-description');
+            
+            // Create elements if they don't exist
+            if (!videoTitle || !videoDescription) {
+                const videoInfo = document.querySelector('.video-info');
+                if (videoInfo) {
+                    if (!videoTitle) {
+                        videoTitle = document.createElement('h2');
+                        videoTitle.className = 'video-title mb-3';
+                        videoInfo.prepend(videoTitle);
+                    }
+                    if (!videoDescription) {
+                        videoDescription = document.createElement('div');
+                        videoDescription.className = 'video-description text-muted';
+                        videoInfo.appendChild(videoDescription);
+                    }
+                }
+            }
+            
+            // Update video info
             if (videoTitle) videoTitle.textContent = video.title || 'Untitled Video';
             if (videoDescription) videoDescription.textContent = video.description || 'No description available';
             
@@ -515,41 +561,134 @@ function initHistoryPage() {
             window.history.pushState({}, '', `#${video.id}`);
             
             // Initialize or update the video player
-            if (window.videoPlayer) {
-                // If using Video.js
-                if (window.videoPlayer.techName_ === 'Youtube') {
-                    window.videoPlayer.src({
-                        src: `https://www.youtube.com/watch?v=${video.id}`,
-                        type: 'video/youtube'
+            if (!videoElement) {
+                console.error('Video player element not found');
+                return;
+            }
+            
+            // Initialize Video.js if not already initialized
+            if (typeof videojs !== 'undefined' && !window.videoPlayer) {
+                try {
+                    window.videoPlayer = videojs('videoPlayer', {
+                        controls: true,
+                        autoplay: true,
+                        preload: 'auto',
+                        fluid: true,
+                        responsive: true,
+                        techOrder: ['youtube'],
+                        youtube: {
+                            ytControls: 2,
+                            rel: 0,
+                            showinfo: 0,
+                            iv_load_policy: 3,
+                            modestbranding: 1
+                        }
                     });
-                } else {
-                    window.videoPlayer.src({
-                        src: video.videoUrl || `https://www.youtube.com/watch?v=${video.id}`,
-                        type: video.videoUrl ? 'video/mp4' : 'video/youtube'
+                    
+                    // Handle when the video is ready
+                    window.videoPlayer.ready(function() {
+                        console.log('Video.js player is ready');
                     });
-                }
-                window.videoPlayer.play();
-            } else {
-                // Fallback to native video element if Video.js is not available
-                const videoElement = document.querySelector('video');
-                if (videoElement) {
-                    videoElement.src = video.videoUrl || `https://www.youtube.com/embed/${video.id}`;
-                    videoElement.play();
+                } catch (error) {
+                    console.error('Error initializing Video.js:', error);
                 }
             }
             
-            // Mark the video as active in the list
+            // Set video source based on type (YouTube or direct URL)
+            const setVideoSource = () => {
+                try {
+                    console.log('Setting video source for ID:', video.id);
+                    
+                    if (video.id && video.id.startsWith('http')) {
+                        console.log('Processing direct video URL');
+                        // Direct video URL
+                        if (window.videoPlayer) {
+                            console.log('Using Video.js for direct video');
+                            window.videoPlayer.src({
+                                src: video.id,
+                                type: 'video/mp4'
+                            });
+                            window.videoPlayer.one('loadedmetadata', function() {
+                                console.log('Video metadata loaded, playing...');
+                                window.videoPlayer.play().catch(e => {
+                                    console.error('Error playing video with Video.js:', e);
+                                });
+                            });
+                        } else {
+                            console.log('Using native video element for direct video');
+                            videoElement.src = video.id;
+                            videoElement.load();
+                            videoElement.play().catch(e => {
+                                console.error('Error playing video with native element:', e);
+                            });
+                        }
+                    } else if (video.id) {
+                        console.log('Processing YouTube video');
+                        // YouTube video
+                        const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
+                        console.log('YouTube URL:', youtubeUrl);
+                        
+                        if (window.videoPlayer) {
+                            console.log('Using Video.js for YouTube');
+                            window.videoPlayer.src({
+                                src: youtubeUrl,
+                                type: 'video/youtube'
+                            });
+                            window.videoPlayer.one('loadedmetadata', function() {
+                                console.log('YouTube metadata loaded, playing...');
+                                window.videoPlayer.play().catch(e => {
+                                    console.error('Error playing YouTube video with Video.js:', e);
+                                });
+                            });
+                        } else {
+                            console.log('Using iframe for YouTube');
+                            videoElement.src = `https://www.youtube.com/embed/${video.id}?autoplay=1`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error in setVideoSource:', error);
+                    throw error; // Re-throw to be caught by the outer try-catch
+                }
+            };
+            
+            // Set the video source
+            setVideoSource();
+            
+            // Mark the video as active in the list and scroll to it
             document.querySelectorAll('.video-item').forEach(item => {
-                item.classList.toggle('active', item.getAttribute('data-video-id') === video.id);
+                const isActive = item.getAttribute('data-video-id') === video.id;
+                item.classList.toggle('active', isActive);
+                
+                // Scroll the active item into view if it's not visible
+                if (isActive) {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
             });
             
-            // Scroll to the video player
-            document.querySelector('.video-container')?.scrollIntoView({ behavior: 'smooth' });
+            // Scroll the video player into view
+            const playerContainer = document.querySelector('.video-player-container');
+            if (playerContainer) {
+                playerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
             
         } catch (error) {
-            console.error('Error playing video:', error);
-            if (window.showNotification) {
-                showNotification('Error playing video. Please try again.', 'error');
+            console.error('Error in playVideo:', error);
+            // Show user-friendly error message
+            const errorMessage = error.message || 'An error occurred while playing the video';
+            if (typeof showNotification === 'function') {
+                showNotification(errorMessage, 'error');
+            } else {
+                alert(errorMessage);
+            }
+        } finally {
+            // Hide loading state and show video
+            const videoContainer = document.querySelector('.video-container');
+            const videoElement = document.getElementById('videoPlayer');
+            
+            if (videoContainer) videoContainer.classList.remove('loading');
+            if (videoElement) {
+                videoElement.style.opacity = '1';
+                videoElement.style.transition = 'opacity 0.3s ease';
             }
         }
     };

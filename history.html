@@ -77,6 +77,21 @@
             overflow: hidden;
             box-shadow: var(--box-shadow);
             margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .video-container.loading {
+            background: #f8f9fa;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .video-container.loading::after {
+            content: 'Loading video...';
+            color: #6c757d;
+            font-size: 1.1rem;
         }
         
         .video-js {
@@ -311,6 +326,7 @@
             margin-bottom: 0.5rem;
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2; /* Standard property */
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -324,6 +340,7 @@
             margin-bottom: 0.5rem;
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2; /* Standard property */
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -438,26 +455,29 @@
             <!-- Main Content -->
             <div class="col-lg-8">
                 <!-- Video Player -->
-                <div class="video-container">
-                    <video id="history-video" class="video-js vjs-big-play-centered" controls preload="auto" 
-                        data-setup='{"techOrder": ["youtube"], "youtube": {"ytControls": 2, "rel": 0, "showinfo": 0, "iv_load_policy": 3, "modestbranding": 1}}'>
-                        <p class="vjs-no-js">
-                            To view this video please enable JavaScript, and consider upgrading to a
-                            web browser that
-                            <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
-                        </p>
-                    </video>
-                </div>
-                
-                <!-- Video Info -->
-                <div class="video-info">
-                    <h2 class="video-title" id="currentVideoTitle">Select a video to start watching</h2>
-                    <div class="video-meta">
-                        <span><i class="far fa-clock"></i> <span id="currentVideoDuration">--:--</span></span>
-                        <span><i class="far fa-calendar-alt"></i> <span id="currentVideoDate">--/--/----</span></span>
-                        <span class="badge bg-primary"><i class="fas fa-user-graduate me-1"></i> <span id="currentVideoTeacher">Teacher</span></span>
+                <div class="video-player-container mb-4">
+                    <div class="video-container">
+                        <video id="videoPlayer" class="video-js vjs-big-play-centered" controls preload="auto" 
+                            data-setup='{"techOrder": ["youtube"], "youtube": {"ytControls": 2, "rel": 0, "showinfo": 0, "iv_load_policy": 3, "modestbranding": 1}}'>
+                            <p class="vjs-no-js">
+                                To view this video please enable JavaScript, and consider upgrading to a
+                                web browser that
+                                <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+                            </p>
+                        </video>
                     </div>
-                    <p class="video-description mt-3" id="currentVideoDescription">Choose a video from the list to begin your learning journey.</p>
+                    <!-- Video Info -->
+                    <div class="video-info">
+                        <h2 class="video-title" id="currentVideoTitle">Select a video to start watching</h2>
+                        <div class="video-meta">
+                            <span class="me-3"><i class="far fa-clock me-1"></i> <span id="currentVideoDuration">--:--</span></span>
+                            <span class="me-3"><i class="far fa-calendar-alt me-1"></i> <span id="currentVideoDate">--/--/----</span></span>
+                            <span class="badge bg-primary"><i class="fas fa-user-graduate me-1"></i> <span id="currentVideoTeacher">Teacher</span></span>
+                        </div>
+                        <div class="video-description mt-3" id="currentVideoDescription">
+                            <p class="mb-0">Choose a video from the list to begin your learning journey.</p>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Video Description -->
