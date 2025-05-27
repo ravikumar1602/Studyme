@@ -1,7 +1,10 @@
 // Import Firebase services
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
-import { getFirestore, collection, query, where, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, query, where, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { showNotification } from './utils/notifications.js';
+
+// Video.js is loaded globally via script tag
 
 // Firebase configuration
 const firebaseConfig = {
@@ -14,10 +17,21 @@ const firebaseConfig = {
   measurementId: "G-DPBGHHW8ZF"
 };
 
+console.log('Initializing Firebase with config:', firebaseConfig);
+
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+let app, db, auth;
+try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+    console.log('Firebase initialized successfully');
+} catch (error) {
+    console.error('Firebase initialization error:', error);
+    throw error;
+}
+
+// Video.js will be initialized with data-setup attribute in HTML
 
 // Helper function to get current user
 function getCurrentUser() {
@@ -32,20 +46,32 @@ function getCurrentUser() {
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // Check if we're on the history page
+        if (!window.location.pathname.includes('history.html')) {
+            console.log('Not on history page, skipping history.js initialization');
+            return;
+        }
+        
+        console.log('Initializing history page...');
+        console.log('videoList element exists:', !!document.getElementById('videoList'));
+        
         // Check if user is authenticated
         const user = await getCurrentUser();
         if (!user) {
+            console.log('User not authenticated, redirecting to login');
             window.location.href = 'login.html';
             return;
         }
-
-        // Initialize the page
-        initHistoryPage();
         
-        // Initialize teacher panel
+        console.log('User authenticated, initializing page...');
+        initHistoryPage();
         initTeacherPanel();
     } catch (error) {
-        console.error('Error initializing history page:', error);
+        console.error('Error in history.js:', error);
+        // Only show notification if we're on the history page
+        if (window.location.pathname.includes('history.html') && typeof showNotification === 'function') {
+            showNotification('Error initializing page: ' + (error.message || error), 'danger');
+        }
     }
 });
 
@@ -148,71 +174,185 @@ function filterVideosByTeacher(teacherId) {
 
 // Initialize the video player
 function initVideoPlayer() {
-    const videoElement = document.getElementById('history-video');
-    
-    // Initialize the video player with YouTube tech
-    const player = videojs('history-video', {
-        techOrder: ['youtube'],
-        sources: [{
-            type: 'video/youtube',
-            src: ''
-        }],
-        youtube: {
-            ytControls: 2,
-            customVars: { wmode: 'transparent' },
-            rel: 0,
-            showinfo: 0,
-            modestbranding: 1
-        }
-    });
-    
-    return player;
+    try {
+        // Get or initialize the player
+        let player = videojs.getPlayers()['history-video'] || 
+                    videojs('history-video', {
+                        techOrder: ['youtube'],
+                        controls: true,
+                        autoplay: false,
+                        preload: 'auto',
+                        sources: [],
+                        youtube: {
+                            ytControls: 2,
+                            rel: 0,
+                            showinfo: 0,
+                            iv_load_policy: 3,
+                            modestbranding: 1,
+                            enablejsapi: 1
+                        }
+                    }, function onPlayerReady() {
+                        console.log('Video.js player is ready');
+                    });
+        
+        // Handle errors
+        player.on('error', function() {
+            const error = player.error();
+            console.error('Video Player Error:', error);
+            showNotification('Error loading video. Please check the video URL and try again.', 'danger');
+        });
+        
+        return player;
+    } catch (error) {
+        console.error('Error initializing video player:', error);
+        showNotification('Error initializing video player. Please refresh the page.', 'danger');
+        return null;
+    }
 }
 
 // Initialize the history page
 function initHistoryPage() {
-    // Initialize UI elements
-    const videoPlayer = initVideoPlayer();
-    const videoTitle = document.querySelector('.video-title');
-    const videoDescription = document.querySelector('.video-description');
-    const videoList = document.getElementById('video-list');
-    const loadingIndicator = document.getElementById('loading-indicator');
-    
-    // Load videos from Firestore
-    loadVideos();
+    try {
+        // Check if we're on the admin page
+        const isAdminPage = document.getElementById('videosList')?.tagName === 'TBODY';
+        
+        // Initialize UI elements
+        const videoPlayer = initVideoPlayer();
+        const videoTitle = document.querySelector('.video-title');
+        const videoDescription = document.querySelector('.video-description');
+        let videoList = document.getElementById('videoList');
+        const loadingIndicator = document.querySelector('.loading-overlay');
+        
+        // Make sure required elements exist
+        if (!videoList) {
+            console.warn('Video list element not found, trying to find it...');
+            videoList = document.querySelector('.list-group');
+            
+            if (!videoList) {
+                console.error('No suitable video list container found');
+                return; // Exit if we can't find the video list
+            }
+            
+            console.log('Found video list container:', videoList);
+        }
+        
+        // Create a loading indicator if it doesn't exist
+        if (!loadingIndicator) {
+            console.warn('Loading indicator element not found, creating one');
+            const newLoadingIndicator = document.createElement('div');
+            newLoadingIndicator.id = 'loading-indicator';
+            newLoadingIndicator.style.display = 'none';
+            newLoadingIndicator.style.position = 'fixed';
+            newLoadingIndicator.style.top = '50%';
+            newLoadingIndicator.style.left = '50%';
+            newLoadingIndicator.style.transform = 'translate(-50%, -50%)';
+            newLoadingIndicator.innerHTML = 'Loading...';
+            document.body.appendChild(newLoadingIndicator);
+            window.loadingIndicator = newLoadingIndicator;
+        } else {
+            window.loadingIndicator = loadingIndicator;
+        }
+        
+        // Load videos from Firestore
+        loadVideos();
+    } catch (error) {
+        console.error('Error initializing history page:', error);
+        showNotification('Error initializing page. Please refresh and try again.', 'danger');
+    }
     
     // Function to load videos from Firestore
     function loadVideos() {
-        loadingIndicator.style.display = 'block';
-        videoList.innerHTML = '';
+        const videoList = document.getElementById('videoList');
         
-        // Query videos for history subject
-        const videosQuery = query(
-            collection(db, 'videos'),
-            where('subject', '==', 'history'),
-            orderBy('createdAt', 'desc')
-        );
+        // Show loading indicator
+        if (window.loadingIndicator) {
+            window.loadingIndicator.style.display = 'block';
+        }
         
-        // Listen for real-time updates
-        return onSnapshot(videosQuery, 
-            (snapshot) => {
-                const videos = [];
-                snapshot.forEach((doc) => {
-                    videos.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
-                });
-                
-                renderVideos(videos);
-                loadingIndicator.style.display = 'none';
-            },
-            (error) => {
-                console.error('Error loading videos:', error);
-                loadingIndicator.style.display = 'none';
-                videoList.innerHTML = '<p class="error">Error loading videos. Please try again later.</p>';
+        // Clear existing content
+        if (videoList) {
+            videoList.innerHTML = '';
+        } else {
+            console.error('Video list element not found');
+            if (window.loadingIndicator) {
+                window.loadingIndicator.style.display = 'none';
             }
-        );
+            return null;
+        }
+        
+        try {
+            console.log('Querying Khan Sir\'s history videos...');
+            
+            // First, get all history videos
+            const videosQuery = query(
+                collection(db, 'videos'),
+                where('subject', '==', 'history')
+            );
+            
+            console.log('Querying all history videos...');
+            
+            // Listen for real-time updates
+            console.log('Setting up snapshot listener for videos...');
+            return onSnapshot(videosQuery, 
+                (snapshot) => {
+                    console.log('Received snapshot with', snapshot.size, 'videos');
+                    const videos = [];
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        // Only include videos from Khan Sir
+                        if (data.teacher && data.teacher.toLowerCase() === 'khan') {
+                            console.log('Khan Sir video found:', {
+                                id: doc.id,
+                                title: data.title,
+                                teacher: data.teacher,
+                                subject: data.subject
+                            });
+                            videos.push({
+                                id: doc.id,
+                                ...data,
+                                // Ensure createdAt is a Date object for sorting
+                                createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)) : new Date()
+                            });
+                        }
+                    });
+                    
+                    // Sort videos by creation date (newest first)
+                    videos.sort((a, b) => b.createdAt - a.createdAt);
+                    
+                    console.log('Rendering', videos.length, 'Khan Sir videos');
+                    renderVideos(videos);
+                    if (window.loadingIndicator) {
+                        window.loadingIndicator.style.display = 'none';
+                    }
+                },
+                (error) => {
+                    console.error('Error loading videos:', error);
+                    if (window.loadingIndicator) {
+                        window.loadingIndicator.style.display = 'none';
+                    }
+                    if (videoList) {
+                        videoList.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Error loading videos. Please try again later.
+                            </div>`;
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error setting up video query:', error);
+            if (window.loadingIndicator) {
+                window.loadingIndicator.style.display = 'none';
+            }
+            if (videoList) {
+                videoList.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error setting up video query. Please refresh the page.
+                    </div>`;
+            }
+            return null;
+        }
     }
     
     // Format date for display
@@ -235,47 +375,106 @@ function initHistoryPage() {
 
     // Render videos in the list
     function renderVideos(videosToRender) {
+        console.log('renderVideos called with:', videosToRender);
+        
+        if (!videoList) {
+            console.error('videoList element not found in renderVideos');
+            return;
+        }
+        
+        // Clear existing content
+        videoList.innerHTML = '';
+        
         if (!videosToRender || videosToRender.length === 0) {
+            console.log('No videos to render, showing empty state');
             videoList.innerHTML = `
-                <div class="no-videos">
-                    <i class="fas fa-video-slash"></i>
-                    <p>No videos found</p>
-                    <small>No videos available. Check back later for new content.</small>
+                <div class="text-center p-4">
+                    <i class="fas fa-video-slash fa-3x text-muted mb-3"></i>
+                    <p class="h5">No videos found</p>
+                    <p class="text-muted">No history videos available at the moment.</p>
+                    <button class="btn btn-outline-primary" onclick="window.location.reload()">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
                 </div>
             `;
             return;
         }
-
-        // Clear loading state
-        videoList.innerHTML = '';
         
-        videosToRender.forEach(video => {
-            const videoElement = document.createElement('div');
-            videoElement.className = 'video-item';
-            videoElement.setAttribute('data-video-id', video.id);
+        // Render each video as a list group item
+        videosToRender.forEach((video) => {
+            const listItem = document.createElement('a');
+            listItem.href = '#';
+            listItem.className = 'list-group-item list-group-item-action d-flex gap-3 py-3';
+            listItem.setAttribute('data-video-id', video.id);
             
-            // Format video duration if available
-            const duration = video.duration ? formatDuration(video.duration) : '';
+            // Create thumbnail column
+            const thumbnailCol = document.createElement('div');
+            thumbnailCol.className = 'video-thumbnail';
             
-            videoElement.innerHTML = `
-                <div class="video-thumbnail">
-                    <img src="${video.thumbnail || `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`}" 
-                         alt="${video.title || 'Video thumbnail'}" 
-                         loading="lazy"
-                         onerror="this.src='https://via.placeholder.com/160x90?text=No+Thumbnail'">
-                    ${duration ? `<span class="duration">${duration}</span>` : ''}
+            // Use YouTube thumbnail if available, otherwise use a placeholder
+            const thumbnailUrl = video.thumbnail || 
+                               (video.id ? `https://img.youtube.com/vi/${video.id}/hqdefault.jpg` : 
+                               'https://via.placeholder.com/320x180?text=No+Thumbnail');
+            
+            thumbnailCol.innerHTML = `
+                <img src="${thumbnailUrl}" 
+                     alt="${video.title || 'Video thumbnail'}"
+                     onerror="this.src='https://via.placeholder.com/320x180?text=No+Thumbnail'">
+                <div class="video-play-overlay">
+                    <i class="fas fa-play"></i>
                 </div>
-                <div class="video-info">
-                    <h3>${video.title || 'Untitled Video'}</h3>
-                    ${video.teacherName ? `<p class="teacher">By: ${video.teacherName}</p>` : ''}
-                    <p class="date">${formatDate(video.createdAt?.toDate?.() || video.createdAt || new Date())}</p>
-                </div>
+                ${video.duration ? `
+                <span class="video-duration">
+                    ${video.duration}
+                </span>` : ''}
             `;
             
-            // Add click event to play the video
-            videoElement.addEventListener('click', () => window.playVideo(video));
+            // Create content column
+            const contentCol = document.createElement('div');
+            contentCol.className = 'video-details';
             
-            videoList.appendChild(videoElement);
+            // Format date if available
+            const date = video.createdAt ? new Date(video.createdAt.toDate ? video.createdAt.toDate() : video.createdAt) : null;
+            const formattedDate = date ? date.toLocaleDateString() : '';
+            const formattedTime = date ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+            
+            // Build meta information
+            const metaInfo = [];
+            if (video.teacher) {
+                metaInfo.push(`<span class="video-meta-item"><i class="fas fa-chalkboard-teacher"></i>${video.teacher}</span>`);
+            }
+            if (formattedDate) {
+                metaInfo.push(`<span class="video-meta-item"><i class="far fa-calendar-alt"></i>${formattedDate}</span>`);
+            }
+            if (video.duration) {
+                metaInfo.push(`<span class="video-meta-item"><i class="far fa-clock"></i>${video.duration}</span>`);
+            }
+            
+            contentCol.innerHTML = `
+                <div>
+                    <h3 class="video-item-title">${video.title || 'Untitled Video'}</h3>
+                    ${video.description ? `<p class="video-item-description">${video.description}</p>` : ''}
+                </div>
+                <div class="video-meta">
+                    ${metaInfo.join('')}
+                </div>`;
+            
+            // Assemble the list item
+            listItem.appendChild(thumbnailCol);
+            listItem.appendChild(contentCol);
+            
+            // Add click handler
+            listItem.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Playing video:', video);
+                if (window.playVideo) {
+                    window.playVideo(video);
+                } else {
+                    console.error('playVideo function not found');
+                }
+            });
+            
+            videoList.appendChild(listItem);
         });
         
         // If there's a hash in the URL, try to play that video
@@ -293,24 +492,18 @@ function initHistoryPage() {
     }
     
     // Play the selected video
-    window.playVideo = function(video) {
+    window.playVideo = async function(video) {
         if (!video || !video.id) return;
         
-        // Update URL with video ID
-        window.location.hash = `#${video.id}`;
+        // Show loading state
+        const videoContainer = document.querySelector('.video-container');
+        if (videoContainer) {
+            videoContainer.classList.add('loading');
+        }
         
-        // Update video player
-        if (videoPlayer) {
-            // Update the source
-            videoPlayer.src({
-                src: `https://www.youtube.com/watch?v=${video.id}`,
-                type: 'video/youtube'
-            });
-            
-            // Load and play the video
-            videoPlayer.ready(() => {
-                videoPlayer.play();
-            });
+        try {
+            // Update URL with video ID
+            window.location.hash = `#${video.id}`;
             
             // Update video info
             if (videoTitle) videoTitle.textContent = video.title || 'Untitled Video';
@@ -319,15 +512,40 @@ function initHistoryPage() {
                 videoDescription.style.display = video.description ? 'block' : 'none';
             }
             
-            // Highlight selected video in the list
-            document.querySelectorAll('.video-item').forEach(item => {
-                item.classList.toggle('active', item.dataset.videoId === video.id);
+            // Update video player
+            if (videoPlayer) {
+                // First, reset the player
+                videoPlayer.pause();
+                videoPlayer.reset();
                 
-                // Scroll to the selected video in the list
-                if (item.dataset.videoId === video.id) {
-                    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
-            });
+                // Set the new source
+                const videoSrc = `https://www.youtube.com/watch?v=${video.id}`;
+                videoPlayer.src({
+                    src: videoSrc,
+                    type: 'video/youtube'
+                });
+                
+                // Load and play the video
+                await videoPlayer.play();
+                
+                // Highlight selected video in the list
+                document.querySelectorAll('.video-item').forEach(item => {
+                    item.classList.toggle('active', item.dataset.videoId === video.id);
+                    
+                    // Scroll to the selected video in the list
+                    if (item.dataset.videoId === video.id) {
+                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error playing video:', error);
+            showNotification('Error loading video. Please try again.', 'danger');
+        } finally {
+            // Hide loading state
+            if (videoContainer) {
+                videoContainer.classList.remove('loading');
+            }
         }
     };
     

@@ -6,13 +6,420 @@
     <title>History Videos - StudyZone</title>
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/subjectpage.css">
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <link href="css/youtube-override.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/3.0.1/Youtube.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Video.js CSS -->
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/3.0.1/Youtube.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --dark-color: #1e1e2f;
+            --light-color: #f8f9fa;
+            --success-color: #4bb543;
+            --danger-color: #ff3333;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fb;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* Header Styles */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 4rem 0 3rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PHJlY3Qgd2lkdGg9IjUwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3BhdHRlcm4pIi8+PC9zdmc+');
+            opacity: 0.3;
+        }
+        
+        .page-header h1 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+        
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+        }
+        
+        /* Video Player */
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1.5rem;
+        }
+        
+        .video-js {
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+        }
+        
+        .video-js .vjs-tech {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Video Info */
+        .video-info {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1.5rem;
+        }
+        
+        .video-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
+        }
+        
+        .video-meta {
+            display: flex;
+            gap: 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .video-description {
+            color: #495057;
+            line-height: 1.7;
+        }
+        
+        /* Video List */
+        .video-list-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+        
+        .video-list-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .video-list-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .video-list {
+            max-height: 800px;
+            overflow-y: auto;
+        }
+        
+        /* Video List Container */
+        #videoList {
+            max-height: 80vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #c1c1c1 #f1f1f1;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+        }
+        
+        /* Custom scrollbar for WebKit browsers */
+        #videoList::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #videoList::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        #videoList::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        #videoList::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* Video List Items */
+        .video-item {
+            display: flex;
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+            background: white;
+        }
+        
+        .video-item:last-child {
+            border-bottom: none;
+        }
+        
+        .video-item:hover {
+            background-color: #f8f9ff;
+            transform: translateX(4px);
+        }
+        
+        .video-item.active {
+            background-color: #f0f4ff;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .video-thumbnail {
+            position: relative;
+            width: 180px;
+            min-width: 180px;
+            height: 100px;
+            margin-right: 1.25rem;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background: #f5f5f5;
+        }
+        
+        .video-item:hover .video-thumbnail {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+        
+        .video-thumbnail::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.1) 0%, rgba(67, 97, 238, 0) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+        
+        .video-item:hover .video-thumbnail::before {
+            opacity: 1;
+        }
+        
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform-origin: center;
+        }
+        
+        .video-item:hover .video-thumbnail img {
+            transform: scale(1.08);
+        }
+        
+        .video-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 16px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 2;
+        }
+        
+        /* Play button overlay */
+        .video-play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 2;
+        }
+        
+        .video-item:hover .video-play-overlay {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .video-play-overlay i {
+            color: var(--primary-color);
+            font-size: 1rem;
+            margin-left: 2px;
+        }
+        
+        .video-details {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+        }
+        
+        .video-item-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
+            color: #2c3e50;
+        }
+        
+        .video-item-description {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .video-meta {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: auto;
+        }
+        
+        .video-meta-item {
+            display: flex;
+            align-items: center;
+            margin-right: 1rem;
+            color: #5a5a5a;
+        }
+        
+        .video-meta i {
+            margin-right: 0.4rem;
+            font-size: 0.9em;
+            color: var(--primary-color);
+            width: 16px;
+            text-align: center;
+        }
+        
+        .video-badge {
+            background: #e3f2fd;
+            color: var(--primary-color);
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+        }
+        
+        /* Loading States */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .video-item {
+                flex-direction: column;
+            }
+            
+            .video-thumbnail {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 0.75rem;
+            }
+            
+            .video-thumbnail img {
+                height: 180px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .video-thumbnail img {
+                height: 200px;
+            }
+            
+            .page-header {
+                padding: 3rem 0 2rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Header will be loaded here -->
@@ -21,139 +428,115 @@
     <!-- Page Header -->
     <div class="page-header">
         <div class="container">
-            <h1>History Video Lectures</h1>
-            <p>Learn from expert history teachers and explore historical events in detail</p>
+            <h1><i class="fas fa-history me-3"></i>History Lectures</h1>
+            <p>Explore comprehensive history lessons from expert educators</p>
         </div>
     </div>
 
-    <div class="container">
-        <div class="page-layout">
-            <!-- Teacher Panel - Single Responsive Version -->
-            <aside class="teacher-panel" id="teacherPanel">
-                <div class="panel-header">
-                    <h2>Our History Teachers</h2>
-                    <button class="close-panel" id="closeTeacherPanel" aria-label="Close teacher panel">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="panel-content">
-                    <div class="teacher-search">
-                        <input type="text" id="teacherSearch" placeholder="Search teachers...">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <ul class="teacher-list" id="teacherList">
-                        <li class="teacher-item" data-teacher="all">
-                            <div class="teacher-avatar">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="teacher-info">
-                                <h3>All Teachers</h3>
-                                <p>View all available lectures</p>
-                            </div>
-                        </li>
-                        <li class="teacher-item" data-teacher="khan">
-                            <div class="teacher-avatar">KS</div>
-                            <div class="teacher-info">
-                                <h3>Khan Sir</h3>
-                                <p>Ancient History Expert</p>
-                            </div>
-                        </li>
-                        <li class="teacher-item" data-teacher="sarah">
-                            <div class="teacher-avatar">SJ</div>
-                            <div class="teacher-info">
-                                <h3>Sarah Johnson</h3>
-                                <p>World Wars Specialist</p>
-                            </div>
-                        </li>
-                        <li class="teacher-item" data-teacher="michael">
-                            <div class="teacher-avatar">MB</div>
-                            <div class="teacher-info">
-                                <h3>Michael Brown</h3>
-                                <p>Modern History Professor</p>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </aside>
-            
-            <!-- Mobile Menu Toggle Button -->
-            <button class="menu-toggle" id="teacherPanelToggle">
-                <i class="fas fa-chalkboard-teacher"></i>
-                <span>Teachers</span>
-            </button>
-
+    <div class="container py-4">
+        <div class="row g-4">
             <!-- Main Content -->
-            <main class="main-content">
+            <div class="col-lg-8">
                 <!-- Video Player -->
                 <div class="video-container">
-                    <video id="history-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" data-setup='{"techOrder": ["youtube"], "sources": [{"type": "video/youtube", "src": ""}]}'>
+                    <video id="history-video" class="video-js vjs-big-play-centered" controls preload="auto" 
+                        data-setup='{"techOrder": ["youtube"], "youtube": {"ytControls": 2, "rel": 0, "showinfo": 0, "iv_load_policy": 3, "modestbranding": 1}}'>
                         <p class="vjs-no-js">
                             To view this video please enable JavaScript, and consider upgrading to a
                             web browser that
                             <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
                         </p>
                     </video>
-                    <div class="video-info">
-                        <h2 class="video-title">Select a video to start watching</h2>
-                        <p class="video-description">Choose a video from the list to begin learning</p>
+                </div>
+                
+                <!-- Video Info -->
+                <div class="video-info">
+                    <h2 class="video-title" id="currentVideoTitle">Select a video to start watching</h2>
+                    <div class="video-meta">
+                        <span><i class="far fa-clock"></i> <span id="currentVideoDuration">--:--</span></span>
+                        <span><i class="far fa-calendar-alt"></i> <span id="currentVideoDate">--/--/----</span></span>
+                        <span class="badge bg-primary"><i class="fas fa-user-graduate me-1"></i> <span id="currentVideoTeacher">Teacher</span></span>
+                    </div>
+                    <p class="video-description mt-3" id="currentVideoDescription">Choose a video from the list to begin your learning journey.</p>
+                </div>
+                
+                <!-- Video Description -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>About This Lecture</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="currentVideoFullDescription">
+                            <p class="text-muted mb-0">Select a video to view its description and details.</p>
+                        </div>
+                        <div class="mt-3" id="videoTags"></div>
                     </div>
                 </div>
-
-                <!-- Video List -->
-                <aside class="video-sidebar" id="videoSidebar">
-                    <div class="video-search">
-                        <input type="text" id="videoSearch" placeholder="Search videos...">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <div class="video-list" id="videoList">
-                        <!-- Videos will be loaded here -->
-                        <div class="loading" id="loadingIndicator">
-                            <div class="spinner"></div>
-                            <p>Loading videos...</p>
+            </div>
+            
+            <!-- Video List Sidebar -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list-ul me-2"></i>Lecture List</h5>
+                        <div class="input-group input-group-sm" style="max-width: 200px;">
+                            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" id="videoSearch" class="form-control" placeholder="Search videos...">
                         </div>
                     </div>
-                </aside>
-            </main>
-            
-            <!-- Playlist Panel -->
-            <aside class="playlist-panel">
-                <div class="playlist-header">Playlist</div>
-                <ul class="playlist" id="playlist">
-                    <!-- Playlist items will be loaded here by JavaScript -->
-                </ul>
-            </aside>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush" id="videoList">
+                            <!-- Videos will be loaded here -->
+                            <div class="text-center p-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 mb-0 text-muted">Loading videos...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Footer will be loaded here -->
-    <footer id="footer"></footer>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading video...</p>
+        </div>
+    </div>
 
-    <!-- Load YouTube IFrame API -->
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Video.js and YouTube plugin -->
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/3.0.1/videojs-youtube.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js",
+                "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js",
+                "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"
+            }
+        }
+    </script>
+    
+    <!-- YouTube IFrame API -->
     <script>
         // Load the YouTube IFrame API asynchronously
         var tag = document.createElement('script');
         tag.src = 'https://www.youtube.com/iframe_api';
         var firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    </script>
-
-    <!-- Scripts -->
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/3.0.1/Youtube.min.js"></script>
-    
-    <!-- Firebase SDK -->
-    <script type="importmap">
-    {
-        "imports": {
-            "firebase/app": "https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js",
-            "firebase/auth": "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js",
-            "firebase/firestore": "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"
-        }
-    }
-    </script>
-    
-    <!-- YouTube API -->
-    <script>
+        
+        // This function creates an <iframe> (and YouTube player) after the API code downloads.
         function onYouTubeIframeAPIReady() {
             console.log('YouTube IFrame API is ready');
         }
