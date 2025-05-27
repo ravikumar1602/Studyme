@@ -46,31 +46,37 @@ function getCurrentUser() {
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        console.log('Initializing page...');
+        
         // Check if we're on the history page
-        if (!window.location.pathname.includes('history.html')) {
-            console.log('Not on history page, skipping history.js initialization');
-            return;
+        if (window.location.pathname.includes('history.html')) {
+            // No auth required for history page
+            console.log('Initializing history page...');
+            await initHistoryPage();
+        } 
+        // Check if we're on the admin page
+        else if (window.location.pathname.includes('admin.html')) {
+            console.log('Initializing admin page...');
+            // Only require auth for admin page
+            const auth = getAuth();
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is signed in, initialize admin panel
+                    console.log('User authenticated, initializing admin panel...');
+                    initTeacherPanel();
+                } else {
+                    // Redirect to login or show login UI
+                    console.log('User not authenticated, redirecting to login...');
+                    window.location.href = 'login.html';
+                }
+            });
         }
-        
-        console.log('Initializing history page...');
-        console.log('videoList element exists:', !!document.getElementById('videoList'));
-        
-        // Check if user is authenticated
-        const user = await getCurrentUser();
-        if (!user) {
-            console.log('User not authenticated, redirecting to login');
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        console.log('User authenticated, initializing page...');
-        initHistoryPage();
-        initTeacherPanel();
     } catch (error) {
-        console.error('Error in history.js:', error);
-        // Only show notification if we're on the history page
-        if (window.location.pathname.includes('history.html') && typeof showNotification === 'function') {
-            showNotification('Error initializing page: ' + (error.message || error), 'danger');
+        console.error('Initialization error:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('An error occurred while initializing the page.', 'error');
+        } else {
+            alert('An error occurred while initializing the page: ' + error.message);
         }
     }
 });
@@ -495,56 +501,55 @@ function initHistoryPage() {
     window.playVideo = async function(video) {
         if (!video || !video.id) return;
         
-        // Show loading state
-        const videoContainer = document.querySelector('.video-container');
-        if (videoContainer) {
-            videoContainer.classList.add('loading');
-        }
+        console.log('Playing video:', video);
         
         try {
-            // Update URL with video ID
-            window.location.hash = `#${video.id}`;
-            
             // Update video info
+            const videoTitle = document.querySelector('.video-title');
+            const videoDescription = document.querySelector('.video-description');
+            
             if (videoTitle) videoTitle.textContent = video.title || 'Untitled Video';
-            if (videoDescription) {
-                videoDescription.textContent = video.description || 'No description available.';
-                videoDescription.style.display = video.description ? 'block' : 'none';
+            if (videoDescription) videoDescription.textContent = video.description || 'No description available';
+            
+            // Update URL with video ID for deep linking
+            window.history.pushState({}, '', `#${video.id}`);
+            
+            // Initialize or update the video player
+            if (window.videoPlayer) {
+                // If using Video.js
+                if (window.videoPlayer.techName_ === 'Youtube') {
+                    window.videoPlayer.src({
+                        src: `https://www.youtube.com/watch?v=${video.id}`,
+                        type: 'video/youtube'
+                    });
+                } else {
+                    window.videoPlayer.src({
+                        src: video.videoUrl || `https://www.youtube.com/watch?v=${video.id}`,
+                        type: video.videoUrl ? 'video/mp4' : 'video/youtube'
+                    });
+                }
+                window.videoPlayer.play();
+            } else {
+                // Fallback to native video element if Video.js is not available
+                const videoElement = document.querySelector('video');
+                if (videoElement) {
+                    videoElement.src = video.videoUrl || `https://www.youtube.com/embed/${video.id}`;
+                    videoElement.play();
+                }
             }
             
-            // Update video player
-            if (videoPlayer) {
-                // First, reset the player
-                videoPlayer.pause();
-                videoPlayer.reset();
-                
-                // Set the new source
-                const videoSrc = `https://www.youtube.com/watch?v=${video.id}`;
-                videoPlayer.src({
-                    src: videoSrc,
-                    type: 'video/youtube'
-                });
-                
-                // Load and play the video
-                await videoPlayer.play();
-                
-                // Highlight selected video in the list
-                document.querySelectorAll('.video-item').forEach(item => {
-                    item.classList.toggle('active', item.dataset.videoId === video.id);
-                    
-                    // Scroll to the selected video in the list
-                    if (item.dataset.videoId === video.id) {
-                        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }
-                });
-            }
+            // Mark the video as active in the list
+            document.querySelectorAll('.video-item').forEach(item => {
+                item.classList.toggle('active', item.getAttribute('data-video-id') === video.id);
+            });
+            
+            // Scroll to the video player
+            document.querySelector('.video-container')?.scrollIntoView({ behavior: 'smooth' });
+            
         } catch (error) {
             console.error('Error playing video:', error);
-            showNotification('Error loading video. Please try again.', 'danger');
-        } finally {
-            // Hide loading state
-            if (videoContainer) {
-                videoContainer.classList.remove('loading');
+            if (window.showNotification) {
+                showNotification('Error playing video. Please try again.', 'error');
             }
         }
     };
