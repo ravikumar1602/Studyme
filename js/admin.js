@@ -196,6 +196,26 @@ document.addEventListener('DOMContentLoaded', async function() {
         videoFormContainer.style.display = 'none';
     }
 
+    // Function to validate YouTube video ID
+    function isValidYouTubeId(id) {
+        if (!id || typeof id !== 'string') {
+            return false;
+        }
+        
+        // YouTube video IDs can only contain alphanumeric characters, hyphens, and underscores
+        const validChars = /^[a-zA-Z0-9_-]+$/;
+        if (!validChars.test(id)) {
+            return false;
+        }
+        
+        // YouTube video IDs are typically 11 characters, but can be slightly different
+        if (id.length < 10 || id.length > 20) {
+            return false;
+        }
+        
+        return true;
+    }
+
     // Handle video form submission
     async function handleVideoSubmit(e) {
         e.preventDefault();
@@ -221,9 +241,27 @@ document.addEventListener('DOMContentLoaded', async function() {
                 date: new Date().toISOString()
             };
             
+            // Validate required fields
+            if (!videoData.url) {
+                throw new Error('Video URL is required');
+            }
+            
             // Extract YouTube video ID if it's a YouTube URL
             if (videoData.url && (videoData.url.includes('youtube.com') || videoData.url.includes('youtu.be'))) {
                 videoData.id = extractYouTubeId(videoData.url) || videoData.id;
+                
+                // Validate the extracted ID
+                if (!isValidYouTubeId(videoData.id)) {
+                    throw new Error('Invalid YouTube video ID format. Please check the URL.');
+                }
+                
+                // Generate thumbnail URL if not provided
+                if (!videoData.thumbnail) {
+                    videoData.thumbnail = `https://img.youtube.com/vi/${videoData.id}/maxresdefault.jpg`;
+                }
+            } else if (!isValidYouTubeId(videoData.id)) {
+                // If not a YouTube URL, ensure the ID is valid
+                throw new Error('Invalid video ID format. Must be 10-20 alphanumeric characters, hyphens, or underscores.');
             }
             
             // Update or add the video
@@ -417,17 +455,29 @@ document.addEventListener('DOMContentLoaded', async function() {
                     ${video.description ? `<p class="video-description">${video.description}</p>` : ''}
                 </div>
                 <div class="video-actions">
-                    <button class="btn btn-edit" data-id="${video.id}">
+                    <button class="btn btn-play" data-id="${video.id}" title="Play Video" style="background-color: #28a745; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 0.25rem; margin-right: 0.5rem; cursor: pointer;">
+                        <i class="fas fa-play"></i> Play
+                    </button>
+                    <button class="btn btn-edit" data-id="${video.id}" title="Edit Video">
                         <i class="fas fa-edit"></i> Edit
                     </button>
-                    <button class="btn btn-delete" data-id="${video.id}">
+                    <button class="btn btn-delete" data-id="${video.id}" title="Delete Video">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
             </div>
         `).join('');
         
-        // Add event listeners to edit and delete buttons
+        // Add event listeners to play, edit and delete buttons
+        document.querySelectorAll('.btn-play').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const videoId = btn.getAttribute('data-id');
+                // Open the video in history page with the video ID as parameter
+                window.open(`history.html?videoId=${videoId}`, '_blank');
+            });
+        });
+        
         document.querySelectorAll('.btn-edit').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();

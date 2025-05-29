@@ -43,6 +43,49 @@ function getCurrentUser() {
     });
 }
 
+// Global function to play a video
+window.playVideo = function(video) {
+    try {
+        console.log('Playing video:', video);
+        
+        // Get the video container
+        const videoContainer = document.querySelector('.video-player-container');
+        
+        if (!videoContainer) {
+            console.error('Video container not found');
+            return;
+        }
+        
+        // Show loading state
+        videoContainer.classList.add('loading');
+        
+        // Update URL with video ID for deep linking
+        if (video && video.id) {
+            const newUrl = window.location.pathname + '?videoId=' + encodeURIComponent(video.id);
+            window.history.pushState({ videoId: video.id }, '', newUrl);
+        }
+        
+        // Set the video source (only passing the container)
+        setVideoSource(video, videoContainer);
+        
+    } catch (error) {
+        console.error('Error in playVideo:', error);
+        // Show user-friendly error message
+        const errorMessage = 'Failed to play the video. Please try again.';
+        if (typeof showNotification === 'function') {
+            showNotification(errorMessage, 'error');
+        } else {
+            alert(errorMessage);
+        }
+        
+        // Make sure to remove loading state on error
+        const videoContainer = document.querySelector('.video-player-container');
+        if (videoContainer) {
+            videoContainer.classList.remove('loading');
+        }
+    }
+};
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -182,24 +225,58 @@ function filterVideosByTeacher(teacherId) {
 function initVideoPlayer() {
     console.log('Initializing video player...');
     
-    // The video player is now automatically initialized by the VideoPlayer class
-    // We'll store the player instance on the window for easy access
-    window.videoPlayer = new VideoPlayer('videoPlayer', {
-        autoplay: true,
-        controls: true,
-        onReady: (event) => {
-            console.log('Video player is ready');
-            // You can add any custom behavior when player is ready
-        },
-        onStateChange: (event) => {
-            console.log('Player state changed:', event.data);
-            // You can add custom behavior on state change
-        },
-        onError: (event) => {
-            console.error('Player error:', event.data);
-            // You can add custom error handling
-        }
-    });
+    // Make sure the video player container exists
+    const videoContainer = document.getElementById('videoPlayer');
+    if (!videoContainer) {
+        console.error('Video player container not found');
+        return null;
+    }
+    
+    // Clear any existing content
+    videoContainer.innerHTML = '';
+    
+    try {
+        // The video player is now automatically initialized by the VideoPlayer class
+        // We'll store the player instance on the window for easy access
+        window.videoPlayer = new VideoPlayer('videoPlayer', {
+            autoplay: true,
+            controls: true,
+            onReady: (event) => {
+                console.log('Video player is ready');
+                // Hide any loading indicators
+                const loadingIndicator = document.querySelector('.loading-overlay');
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'none';
+                }
+                // You can add any custom behavior when player is ready
+            },
+            onStateChange: (event) => {
+                console.log('Player state changed:', event.data);
+                // You can add custom behavior on state change
+            },
+            onError: (event) => {
+                console.error('Player error:', event.data);
+                // Show error to user
+                const errorContainer = document.createElement('div');
+                errorContainer.className = 'alert alert-danger';
+                errorContainer.textContent = 'Failed to load video. Please try again later.';
+                const container = document.getElementById('videoPlayer');
+                if (container) {
+                    container.appendChild(errorContainer);
+                }
+                // Hide loading indicator
+                const loadingIndicator = document.querySelector('.loading-overlay');
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'none';
+                }
+            }
+        });
+        
+        return window.videoPlayer;
+    } catch (error) {
+        console.error('Error initializing video player:', error);
+        return null;
+    }
     
     // Return a simple interface for compatibility
     return {
@@ -415,8 +492,27 @@ function initHistoryPage() {
                     renderVideos(videos);
                     hideLoadingOverlay();
 
-                    // Auto-play the first video if available
-                    if (videos.length > 0) {
+                    // Check for video ID in URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const videoIdFromUrl = urlParams.get('videoId');
+                    
+                    if (videoIdFromUrl) {
+                        // Find the video with the matching ID
+                        const videoToPlay = videos.find(video => video.id === videoIdFromUrl);
+                        if (videoToPlay) {
+                            console.log('Playing video from URL parameter:', videoIdFromUrl);
+                            setTimeout(() => window.playVideo(videoToPlay), 500);
+                        } else {
+                            console.warn('Video not found with ID:', videoIdFromUrl);
+                            // Fallback to first video
+                            if (videos.length > 0) {
+                                console.log('Video not found, playing first video instead');
+                                setTimeout(() => window.playVideo(videos[0]), 500);
+                            }
+                        }
+                    } 
+                    // Auto-play the first video if no specific video ID is provided
+                    else if (videos.length > 0) {
                         console.log('Auto-playing first video');
                         setTimeout(() => window.playVideo(videos[0]), 500);
                     }
@@ -629,44 +725,66 @@ function initHistoryPage() {
 
     // Play the selected video
     window.playVideo = async function(video) {
-        // Validate input
-        if (!video) {
-            console.error('No video object provided');
-            return;
-        }
-        
-        if (!video.id) {
-            console.error('Video ID is missing', video);
-            return;
-        }
-        
-        console.log('Playing video:', video);
-        
-        // Get DOM elements
-        const videoContainer = document.querySelector('.video-container');
-        const videoElement = document.getElementById('videoPlayer');
-        
-        if (!videoContainer) {
-            console.error('Video container not found');
-            return;
-        }
-        
-        if (!videoElement) {
-            console.error('Video element not found');
-            return;
-        }
+        // Get video container at the start of the function
+        const videoContainer = document.querySelector('.video-player-container');
         
         try {
-            // Show loading state
-            console.log('Showing loading state');
-            videoContainer.classList.add('loading');
-            videoElement.style.opacity = '0';
+            // Validate input
+            if (!video) {
+                throw new Error('No video object provided');
+            }
             
-            // Update video info
+            if (!videoContainer) {
+                throw new Error('Video container not found');
+            }
+
+            // Show loading state
+            videoContainer.innerHTML = '<div class="text-center p-4">Loading video...</div>';
+            videoContainer.classList.add('loading');
+            
+            // Extract video ID from URL if it exists
+            let videoId = video.id || '';
+            if (video.url) {
+                try {
+                    const url = new URL(video.url);
+                    // Handle youtu.be short URLs
+                    if (url.hostname.includes('youtu.be')) {
+                        const pathParts = url.pathname.split('/').filter(Boolean);
+                        if (pathParts.length > 0) {
+                            videoId = pathParts[0].split('?')[0];
+                        }
+                    } 
+                    // Handle youtube.com URLs
+                    else if (url.hostname.includes('youtube.com') || url.hostname.includes('youtube-nocookie.com')) {
+                        if (url.searchParams.has('v')) {
+                            videoId = url.searchParams.get('v');
+                        } else if (url.pathname.startsWith('/embed/')) {
+                            const pathParts = url.pathname.split('/');
+                            if (pathParts.length > 2) {
+                                videoId = pathParts[2].split('?')[0];
+                            }
+                        }
+                    }
+                    console.log('Extracted video ID:', videoId);
+                } catch (e) {
+                    console.warn('Error parsing video URL:', e);
+                    // Continue with the original videoId if URL parsing fails
+                }
+            }
+            
+            // Validate the video ID format
+            if (!isValidYouTubeId(videoId)) {
+                console.error('Invalid YouTube video ID format:', videoId);
+                throw new Error('The video link is not in a valid format. Please check the URL.');
+            }
+            
+            // Create a new video object with the extracted ID
+            const videoWithId = { ...video, id: videoId };
+            
+            // Create elements if they don't exist
             let videoTitle = document.querySelector('.video-title');
             let videoDescription = document.querySelector('.video-description');
             
-            // Create elements if they don't exist
             if (!videoTitle || !videoDescription) {
                 const videoInfo = document.querySelector('.video-info');
                 if (videoInfo) {
@@ -682,17 +800,16 @@ function initHistoryPage() {
                     }
                 }
             }
+            // Update video info with the video that has the correct ID
+            if (videoTitle) videoTitle.textContent = videoWithId.title || 'Untitled Video';
+            if (videoDescription) videoDescription.textContent = videoWithId.description || 'No description available';
             
-            // Update video info
-            if (videoTitle) videoTitle.textContent = video.title || 'Untitled Video';
-            if (videoDescription) videoDescription.textContent = video.description || 'No description available';
-            
-            // Set the video source
-            setVideoSource(video, videoContainer, videoElement);
+            // Set the video source with the video object containing the correct ID
+            setVideoSource(videoWithId, videoContainer);
             
             // Mark the video as active in the list and scroll to it
             document.querySelectorAll('.video-item').forEach(item => {
-                const isActive = item.getAttribute('data-video-id') === video.id;
+                const isActive = item.getAttribute('data-video-id') === videoWithId.id;
                 item.classList.toggle('active', isActive);
                 
                 // Scroll the active item into view if it's not visible
@@ -702,9 +819,9 @@ function initHistoryPage() {
             });
             
             // Scroll the video player into view
-            const playerContainer = document.querySelector('.video-player-container');
-            if (playerContainer) {
-                playerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const playerElement = document.querySelector('.video-player-container');
+            if (playerElement) {
+                playerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             
         } catch (error) {
@@ -716,124 +833,1015 @@ function initHistoryPage() {
             } else {
                 alert(errorMessage);
             }
+            
+            // Show error in the video container if available
+            if (videoContainer) {
+                videoContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        <p>${errorMessage}</p>
+                        <button onclick="window.location.reload()" class="btn btn-sm btn-outline-secondary mt-2">
+                            Refresh Page
+                        </button>
+                    </div>
+                `;
+            }
         } finally {
-            // Hide loading state and show video
-            if (videoContainer) videoContainer.classList.remove('loading');
-            if (videoElement) {
-                videoElement.style.opacity = '1';
-                videoElement.style.transition = 'opacity 0.3s ease';
+            // Hide loading state
+            if (videoContainer) {
+                videoContainer.classList.remove('loading');
+            }
+            
+            // Clean up any video element reference if it exists
+            try {
+                const videoElement = document.querySelector('video');
+                if (videoElement) {
+                    videoElement.style.opacity = '1';
+                    videoElement.style.transition = 'opacity 0.3s ease';
+                }
+            } catch (e) {
+                console.warn('Error cleaning up video element:', e);
             }
         }
     };
 }
 
 // Set video source based on type (YouTube or direct URL)
-const setVideoSource = (video, videoContainer, videoElement) => {
+const setVideoSource = (video, container) => {
+    // Make sure we have a valid container
+    const videoContainer = container || document.querySelector('.video-player-container');
+    
+    if (!videoContainer) {
+        console.error('Video container not found');
+        return;
+    }
+    
     try {
-        console.log('Setting video source for ID:', video.id);
-
-        // First, check if we already have a player instance
-        if (window.videoPlayer) {
-            // If player exists, just update the source
+        console.log('Setting video source for video:', video);
+        
+        // Clear any existing player
+        if (window.youTubePlayer) {
             try {
-                window.videoPlayer.src({
-                    type: 'video/youtube',
-                    src: `https://www.youtube.com/watch?v=${video.id}`
-                });
-                window.videoPlayer.load();
-                window.videoPlayer.play();
-                videoContainer.classList.remove('loading');
-                videoElement.style.opacity = '1';
-                return;
-            } catch (error) {
-                console.warn('Error updating existing player, will reinitialize:', error);
-                // If there's an error with the existing player, dispose it and create a new one
-                if (window.videoPlayer.dispose) {
-                    window.videoPlayer.dispose();
+                if (typeof window.youTubePlayer.destroy === 'function') {
+                    window.youTubePlayer.destroy();
+                } else if (window.youTubePlayer.parentNode) {
+                    window.youTubePlayer.parentNode.removeChild(window.youTubePlayer);
                 }
-                window.videoPlayer = null;
+            } catch (e) {
+                console.warn('Error disposing existing player:', e);
+            } finally {
+                window.youTubePlayer = null;
             }
         }
-
-        // Initialize a new player if none exists or if the existing one had an error
-        console.log('Initializing video player...');
-        const playerOptions = {
-            controls: true,
-            autoplay: true,
-            preload: 'auto',
-            fluid: true,
-            techOrder: ['youtube'],
-            youtube: {
-                ytControls: 2,
-                rel: 0,
-                showinfo: 0,
-                iv_load_policy: 3,
-                modestbranding: 1
-            },
-            sources: [{
-                type: 'video/youtube',
-                src: `https://www.youtube.com/watch?v=${video.id}`
-            }]
-        };
-
-        try {
-            window.videoPlayer = videojs('videoPlayer', playerOptions, function() {
-                console.log('Video.js player is ready');
-                videoContainer.classList.remove('loading');
-                videoElement.style.opacity = '1';
-            });
-        } catch (error) {
-            console.error('Failed to initialize Video.js, falling back to iframe:', error);
-            videoElement.src = `https://www.youtube.com/embed/${video.id}?autoplay=1`;
+        
+        // Clear the video container
+        videoContainer.innerHTML = `
+            <div id="youtubePlayer"></div>
+            <!-- Custom Video Controls -->
+            <div class="custom-video-controls">
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="controls-row">
+                    <div class="left-controls">
+                        <button class="control-btn" id="playPauseBtn" title="Play/Pause">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="control-btn" id="skipBackwardBtn" title="Skip Back 10s">
+                            <i class="fas fa-backward"></i> 10s
+                        </button>
+                        <button class="control-btn" id="skipForwardBtn" title="Skip Forward 10s">
+                            10s <i class="fas fa-forward"></i>
+                        </button>
+                        <div class="time-display">
+                            <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
+                        </div>
+                    </div>
+                    <div class="right-controls">
+                        <div class="speed-menu">
+                            <button class="control-btn" id="speedBtn" title="Playback Speed">
+                                <i class="fas fa-tachometer-alt"></i> 1x
+                            </button>
+                            <div class="menu-content" id="speedMenu">
+                                <button data-speed="0.5">0.5x</button>
+                                <button data-speed="0.75">0.75x</button>
+                                <button data-speed="1" class="active">1x</button>
+                                <button data-speed="1.25">1.25x</button>
+                                <button data-speed="1.5">1.5x</button>
+                                <button data-speed="2">2x</button>
+                            </div>
+                        </div>
+                        <div class="quality-menu">
+                            <button class="control-btn" id="qualityBtn" title="Quality">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="menu-content" id="qualityMenu">
+                                <button data-quality="auto">Auto</button>
+                                <button data-quality="hd1080">1080p</button>
+                                <button data-quality="hd720">720p</button>
+                                <button data-quality="large">480p</button>
+                                <button data-quality="medium">360p</button>
+                                <button data-quality="small">240p</button>
+                            </div>
+                        </div>
+                        <button class="control-btn fullscreen-btn" id="fullscreenBtn" title="Fullscreen">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        videoContainer.classList.add('loading');
+        
+        let videoId = '';
+        
+        // First, check if the video object has a direct videoId property
+        if (video && video.videoId) {
+            console.log('Using video.videoId:', video.videoId);
+            videoId = video.videoId;
+        }
+        // If no direct videoId, try to extract from URL
+        else if (video && video.url) {
+            console.log('Video URL found, extracting ID:', video.url);
+            try {
+                const url = new URL(video.url);
+                if (url.hostname.includes('youtube.com') || url.hostname.includes('youtu.be')) {
+                    if (url.searchParams.has('v')) {
+                        videoId = url.searchParams.get('v');
+                    } else if (url.hostname.includes('youtu.be')) {
+                        videoId = url.pathname.split('/').pop();
+                    }
+                    console.log('Extracted video ID from URL:', videoId);
+                } else {
+                    console.log('Not a YouTube URL, using as direct video source');
+                    // Handle direct video URL (MP4, etc.)
+                    videoContainer.innerHTML = `
+                        <video id="videoPlayer" class="video-js" controls preload="auto" width="100%" height="100%">
+                            <source src="${video.url}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    `;
+                    videoContainer.classList.remove('loading');
+                    return;
+                }
+            } catch (e) {
+                console.warn('Error parsing video URL:', e);
+            }
+        }
+        
+        // If we still don't have a video ID, use the document ID as a last resort
+        if (!videoId && video && video.id) {
+            console.log('Using document ID as fallback:', video.id);
+            videoId = video.id;
+        }
+        
+        // Validate the video ID before using it
+        if (!isValidYouTubeId(videoId)) {
+            console.error('Invalid YouTube video ID:', videoId);
+            videoContainer.innerHTML = `
+                <div class="alert alert-danger">
+                    <p>Error: Invalid video ID format</p>
+                    <p>Please check the video configuration in the admin panel.</p>
+                    <p>Video ID: ${videoId}</p>
+                </div>`;
             videoContainer.classList.remove('loading');
-            videoElement.style.opacity = '1';
+            return;
+        }
+        
+        console.log('Using YouTube video ID:', videoId);
+        
+        // Load the YouTube IFrame API if not already loaded
+        if (!window.YT) {
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+            
+            // Create a promise that resolves when the API is ready
+            window.onYouTubeIframeAPIReady = function() {
+                console.log('YouTube API ready');
+                createYouTubePlayer(videoId, videoContainer);
+            };
+        } else {
+            // If API is already loaded, create the player directly
+            createYouTubePlayer(videoId, videoContainer);
+        }
+    } catch (error) {
+        console.error('Error in setVideoSource:', error);
+        videoContainer.innerHTML = `<div class="alert alert-danger">Error loading video: ${error.message}</div>`;
+        videoContainer.classList.remove('loading');
+    }
+};
+
+// Function to validate YouTube video ID
+function isValidYouTubeId(id) {
+    if (!id || typeof id !== 'string') {
+        return false;
+    }
+    
+    // Basic character set validation - only allow valid YouTube ID characters
+    const validChars = /^[a-zA-Z0-9_-]+$/;
+    if (!validChars.test(id)) {
+        console.warn('Video ID contains invalid characters:', id);
+        return false;
+    }
+    
+    // Basic length check (YouTube IDs are typically 11 chars, but can vary)
+    if (id.length < 10 || id.length > 20) {
+        console.warn('Video ID length is unusual:', id.length);
+        // Don't return false here as some valid IDs might be outside this range
+    }
+    
+    return true;
+}
+
+// Function to create YouTube player
+async function createYouTubePlayer(videoId, container) {
+    console.log('createYouTubePlayer called with videoId:', videoId);
+    
+    // Make sure we have a valid container
+    const playerContainer = container || document.querySelector('.video-player-container');
+    
+    if (!playerContainer) {
+        console.error('YouTube Player container not found');
+        return;
+    }
+    
+    // Clear any existing player
+    if (window.youTubePlayer) {
+        try {
+            window.youTubePlayer.destroy();
+        } catch (e) {
+            console.warn('Error destroying existing player:', e);
+        }
+        window.youTubePlayer = null;
+    }
+    
+    // Initialize player variables
+    let player;
+    let isPlaying = false;
+    let currentSpeed = 1;
+    let updateInterval;
+    
+    // Check if YouTube API is available
+    if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
+        console.log('YouTube API not loaded yet, will initialize when ready');
+        window.pendingVideoId = videoId;
+        window.pendingContainer = playerContainer;
+        
+        // Set up the API ready handler if not already set
+        if (!window.ytApiReadyHandlerSet) {
+            window.ytApiReadyHandlerSet = true;
+            window.onYouTubeIframeAPIReady = function() {
+                console.log('YouTube API is now ready');
+                if (window.pendingVideoId) {
+                    createYouTubePlayer(window.pendingVideoId, window.pendingContainer);
+                }
+            };
+        }
+        return;
+    }
+    
+    // Create the player
+    try {
+        console.log('Creating YouTube player with video ID:', videoId);
+        
+        // First try with standard parameters
+        const standardPlayerPromise = new Promise((resolve) => {
+            const standardPlayer = new YT.Player('youtubePlayer', {
+                height: '100%',
+                width: '100%',
+                videoId: videoId,
+                playerVars: {
+                    'playsinline': 1,
+                    'rel': 0,
+                    'modestbranding': 1,
+                    'controls': 1,  // Try with native controls first
+                    'enablejsapi': 1,
+                    'origin': window.location.origin,
+                    'fs': 1,
+                    'iv_load_policy': 3,
+                    'autoplay': 0
+                },
+                events: {
+                    'onReady': (event) => {
+                        console.log('Standard player ready');
+                        resolve({ type: 'success', player: event.target });
+                    },
+                    'onError': (error) => {
+                        console.error('Standard player error:', error);
+                        resolve({ type: 'error', error });
+                    }
+                }
+            });
+            
+            // Set a timeout in case the player gets stuck
+            setTimeout(() => {
+                if (standardPlayer.getPlayerState) {
+                    const state = standardPlayer.getPlayerState();
+                    if (state === -1 || state === 0) {
+                        resolve({ type: 'timeout' });
+                    }
+                } else {
+                    resolve({ type: 'timeout' });
+                }
+            }, 5000);
+        });
+
+        // Try with standard player first
+        const standardResult = await standardPlayerPromise;
+        if (standardResult.type === 'success') {
+            player = standardResult.player;
+            window.youTubePlayer = player;
+            setupCustomControls();
+            updateDuration();
+            return;
+        }
+        
+        console.log('Standard player failed, trying alternative approach...');
+
+        // If standard player fails, try with iframe API
+        try {
+            const iframe = document.createElement('iframe');
+            iframe.id = 'youtubeIframe';
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
+            iframe.frameBorder = '0';
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+            
+            // Clear previous content
+            playerContainer.innerHTML = '';
+            playerContainer.appendChild(iframe);
+            
+            // Hide custom controls since we're using native ones
+            const controls = document.querySelector('.custom-video-controls');
+            if (controls) {
+                controls.style.display = 'none';
+            }
+            
+            return;
+        } catch (error) {
+            console.error('Iframe approach failed:', error);
+            throw error; // Will be caught by the outer try-catch
+        }
+        
+    } catch (error) {
+        console.error('Error creating YouTube player:', error);
+        showEmbedError(videoId, playerContainer);
+    }
+    
+    // Show embed error message
+    function showEmbedError(videoId, container) {
+        console.log('Showing embed error for video:', videoId);
+        // Show alternative content or message
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'embed-error-message';
+        errorContainer.innerHTML = `
+            <div class="alert alert-warning">
+                <h4>This video cannot be played directly</h4>
+                <p>Please watch this video on YouTube:</p>
+                <a href="https://www.youtube.com/watch?v=${videoId}" 
+                   target="_blank" 
+                   class="btn btn-primary">
+                    Watch on YouTube
+                </a>
+            </div>
+        `;
+        
+        // Clear the player container
+        const playerElement = document.getElementById('youtubePlayer');
+        if (playerElement) {
+            playerElement.style.display = 'none';
+        }
+        
+        // Add error message
+        container.appendChild(errorContainer);
+        
+        // Make sure controls are hidden since we can't play the video
+        const controls = document.querySelector('.custom-video-controls');
+        if (controls) {
+            controls.style.display = 'none';
+        }
+    }
+    
+    // Player ready handler
+    function onPlayerReady(event) {
+        console.log('YouTube player ready');
+        
+        // Make sure player is accessible
+        window.youTubePlayer = player;
+        
+        // Setup controls
+        setupCustomControls();
+        updateDuration();
+        
+        // Force show controls initially
+        const controls = document.querySelector('.custom-video-controls');
+        if (controls) {
+            controls.style.opacity = '1';
+            controls.style.visibility = 'visible';
+            controls.style.display = 'flex';
+        }
+        
+        // Start update interval
+        updateInterval = setInterval(updateProgress, 1000);
+    }
+    
+    // Player state change handler
+    function onPlayerStateChange(event) {
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        
+        switch (event.data) {
+            case YT.PlayerState.PLAYING:
+                isPlaying = true;
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                break;
+            case YT.PlayerState.PAUSED:
+                isPlaying = false;
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                break;
+            case YT.PlayerState.ENDED:
+                isPlaying = false;
+                playPauseBtn.innerHTML = '<i class="fas fa-redo"></i>';
+                break;
+        }
+    }
+    
+    // Player error handler
+    function onPlayerError(event) {
+        // Validate video ID
+        if (!isValidYouTubeId(videoId)) {
+            console.error('Invalid YouTube video ID:', videoId);
+            const errorContainer = document.createElement('div');
+            errorContainer.className = 'alert alert-danger';
+            errorContainer.textContent = `Invalid YouTube video ID: ${videoId}`;
+            container.appendChild(errorContainer);
+            return;
+        }
+        console.error('YouTube Player Error:', event);
+        const errorContainer = playerContainer.querySelector('.error-message') || document.createElement('div');
+        errorContainer.className = 'alert alert-danger';
+        errorContainer.textContent = 'Error loading video. Please try again later.';
+        playerContainer.appendChild(errorContainer);
+    }
+    
+    // Update video progress
+    function updateProgress() {
+        if (!player || !player.getCurrentTime) return;
+        
+        const currentTime = player.getCurrentTime();
+        const duration = player.getDuration();
+        
+        if (isNaN(duration)) return;
+        
+        const progress = (currentTime / duration) * 100;
+        document.getElementById('progressBar').style.width = `${progress}%`;
+        
+        // Update time display
+        document.getElementById('currentTime').textContent = formatTime(currentTime);
+    }
+    
+    // Format time in MM:SS format
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        seconds = Math.floor(seconds % 60);
+        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+    
+    // Update video duration
+    function updateDuration() {
+        const duration = player.getDuration();
+        if (isNaN(duration)) {
+            // Try again after a short delay if duration isn't available yet
+            setTimeout(updateDuration, 500);
+            return;
+        }
+        document.getElementById('duration').textContent = formatTime(duration);
+    }
+    
+    // Setup custom controls event listeners
+    function setupCustomControls() {
+        console.log('Setting up custom controls...');
+        
+        // Make sure controls are visible
+        const controls = document.querySelector('.custom-video-controls');
+        const playerContainer = document.querySelector('.video-player-container');
+        if (!controls || !playerContainer) {
+            console.error('Required elements not found in DOM');
+            return;
+        }
+        
+        // Always show controls by default
+        controls.style.opacity = '1';
+        controls.style.visibility = 'visible';
+        controls.style.display = 'flex';
+        
+        // Add class to detect touch devices
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (isTouchDevice) {
+            document.documentElement.classList.add('touch-device');
+            // Keep controls always visible on touch devices
+            controls.style.opacity = '1';
+            controls.style.visibility = 'visible';
+        }
+        
+        // Function to show controls (kept for compatibility)
+        const showControls = () => {
+            controls.style.opacity = '1';
+            controls.style.visibility = 'visible';
+            controls.style.display = 'flex';
+        };
+        
+        // Function to hide controls (kept for compatibility but won't hide on touch devices)
+        const hideControls = () => {
+            if (!isTouchDevice) {
+                controls.style.opacity = '0';
+            }
+        };
+        
+
+        
+        // Initial setup - always show controls
+        showControls();
+        
+        // Force show controls in case they were hidden by any other script
+        const forceShowControls = () => {
+            controls.style.opacity = '1';
+            controls.style.visibility = 'visible';
+            controls.style.display = 'flex';
+        };
+        
+        // Run immediately and periodically to ensure controls stay visible
+        forceShowControls();
+        setInterval(forceShowControls, 1000);
+        
+        // Add event listeners for hover and focus
+        const controlEvents = ['mouseenter', 'mouseleave', 'mousemove', 'touchstart', 'touchend', 'focusin', 'focusout'];
+        controlEvents.forEach(event => {
+            playerContainer.addEventListener(event, (e) => {
+                if (event === 'mouseenter' || event === 'mousemove' || event === 'touchstart' || event === 'focusin') {
+                    showControls();
+                } else if (event === 'mouseleave' || event === 'touchend' || event === 'focusout') {
+                    // Don't hide if mouse moved to controls
+                    if (!e.relatedTarget || !controls.contains(e.relatedTarget)) {
+                        hideControls();
+                    }
+                }
+            }, { passive: true });
+        });
+        
+        // Keep controls visible when interacting with them
+        controls.addEventListener('mouseenter', showControls, { passive: true });
+        controls.addEventListener('mouseleave', () => {
+            if (!isTouchDevice) {
+                hideControls();
+            }
+        }, { passive: true });
+        
+        // Show controls when video is paused
+        playerContainer.addEventListener('play', () => {
+            playerContainer.classList.remove('paused');
+            if (!isTouchDevice) {
+                setTimeout(hideControls, 2000);
+            }
+        });
+        
+        playerContainer.addEventListener('pause', () => {
+            playerContainer.classList.add('paused');
+            showControls();
+        });
+        
+        // Show controls when tabbing to them
+        controls.addEventListener('focusin', showControls, { passive: true });
+        controls.addEventListener('focusout', (e) => {
+            if (!playerContainer.contains(e.relatedTarget)) {
+                hideControls();
+            }
+        }, { passive: true });
+        
+        // Add touch event listeners for progress bar
+        const progressContainer = document.getElementById('progressContainer');
+        if (progressContainer) {
+            progressContainer.addEventListener('touchstart', handleProgressBarTouch, { passive: true });
+            progressContainer.addEventListener('touchmove', handleProgressBarTouch, { passive: false });
+            progressContainer.addEventListener('touchend', handleProgressBarTouch, { passive: true });
+            
+            // Also handle mouse events for desktop
+            progressContainer.addEventListener('mousedown', (e) => {
+                if (e.button === 0) { // Only left mouse button
+                    handleProgressBarTouch(e);
+                    const onMouseMove = (e) => handleProgressBarTouch(e);
+                    const onMouseUp = (e) => {
+                        handleProgressBarTouch(e);
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    };
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                }
+            });
+        }
+        
+        // Helper function to detect mobile devices
+        function isMobileDevice() {
+            return (typeof window.orientation !== 'undefined') || 
+                   (navigator.userAgent.indexOf('IEMobile') !== -1);
+        }
+        
+        // Handle progress bar touch events
+        function handleProgressBarTouch(e) {
+            if (!player || !player.getDuration) return;
+            
+            e.preventDefault();
+            const progressContainer = document.getElementById('progressContainer');
+            if (!progressContainer) return;
+            
+            const rect = progressContainer.getBoundingClientRect();
+            const pos = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+            const totalWidth = rect.width;
+            const percentage = Math.min(Math.max(pos / totalWidth, 0), 1);
+            const duration = player.getDuration();
+            const newTime = duration * percentage;
+            
+            // Update progress bar
+            const progressBar = document.getElementById('progressBar');
+            if (progressBar) {
+                progressBar.style.width = `${percentage * 100}%`;
+            }
+            
+            // Update time display
+            const currentTimeDisplay = document.getElementById('currentTime');
+            if (currentTimeDisplay) {
+                currentTimeDisplay.textContent = formatTime(newTime);
+            }
+            
+            // Seek on touch end
+            if (e.type === 'touchend') {
+                player.seekTo(newTime, true);
+            }
+        }
+        
+        // Play/Pause button
+        document.getElementById('playPauseBtn').addEventListener('click', () => {
+            if (!player) return;
+            
+            if (isPlaying) {
+                player.pauseVideo();
+            } else {
+                player.playVideo();
+            }
+        });
+        
+        // Skip backward 10 seconds
+        document.getElementById('skipBackwardBtn').addEventListener('click', () => {
+            if (!player) return;
+            const currentTime = player.getCurrentTime();
+            player.seekTo(Math.max(0, currentTime - 10), true);
+        });
+        
+        // Skip forward 10 seconds
+        document.getElementById('skipForwardBtn').addEventListener('click', () => {
+            if (!player) return;
+            const currentTime = player.getCurrentTime();
+            const duration = player.getDuration();
+            player.seekTo(Math.min(duration, currentTime + 10), true);
+        });
+        
+        // Progress bar click to seek
+        document.getElementById('progressContainer').addEventListener('click', (e) => {
+            if (!player) return;
+            const progressContainer = e.currentTarget;
+            const rect = progressContainer.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            const duration = player.getDuration();
+            player.seekTo(duration * pos, true);
+        });
+        
+        // Playback speed controls
+        document.querySelectorAll('#speedMenu button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const speed = parseFloat(e.target.dataset.speed);
+                if (!isNaN(speed)) {
+                    player.setPlaybackRate(speed);
+                    currentSpeed = speed;
+                    document.getElementById('speedBtn').innerHTML = 
+                        `<i class="fas fa-tachometer-alt"></i> ${speed}x`;
+                    
+                    // Update active state
+                    document.querySelectorAll('#speedMenu button').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                }
+            });
+        });
+        
+        // Quality controls (note: YouTube's quality settings are limited by API)
+        document.querySelectorAll('#qualityMenu button').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const quality = e.target.dataset.quality;
+                if (!player || !quality) return;
+                
+                try {
+                    // This is a workaround as the YouTube API has limited quality control
+                    const qualities = await player.getAvailableQualityLevels();
+                    if (qualities.includes(quality.toUpperCase())) {
+                        player.setPlaybackQuality(quality);
+                        e.target.classList.add('active');
+                    } else if (quality === 'auto') {
+                        player.setPlaybackQuality('default');
+                        e.target.classList.add('active');
+                    }
+                } catch (error) {
+                    console.error('Error setting quality:', error);
+                }
+            });
+        });
+        
+        // Fullscreen toggle
+        document.getElementById('fullscreenBtn').addEventListener('click', () => {
+            const container = document.getElementById('videoPlayerContainer');
+            
+            if (!document.fullscreenElement) {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) { /* Safari */
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) { /* IE11 */
+                    container.msRequestFullscreen();
+                }
+                document.getElementById('fullscreenBtn').innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+                document.getElementById('fullscreenBtn').innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
+        
+        // Handle fullscreen change
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+        document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+        
+        function updateFullscreenButton() {
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            if (document.fullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                fullscreenBtn.title = 'Exit Fullscreen';
+            } else {
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                fullscreenBtn.title = 'Fullscreen';
+            }
+        }
+    }
+    
+    // Clean up on player destroy
+    const cleanup = () => {
+        console.log('Cleaning up YouTube player');
+        if (updateInterval) clearInterval(updateInterval);
+        
+        // Remove event listeners
+        const events = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+        events.forEach(event => {
+            document.removeEventListener(event, updateFullscreenButton);
+        });
+        
+        // Ensure controls are visible when player is recreated
+        const controls = document.querySelector('.custom-video-controls');
+        if (controls) {
+            controls.style.opacity = '1';
+            controls.style.visibility = 'visible';
+            controls.style.display = 'flex';
+        }
+    };
+    
+    // Store cleanup function for later use
+    window.cleanupYouTubePlayer = cleanup;
+    
+    // Function to validate YouTube video ID
+    function validateYouTubeId(id) {
+        if (!id || typeof id !== 'string') {
+            return false;
+        }
+        
+        // Basic character set validation - only allow valid YouTube ID characters
+        const validChars = /^[a-zA-Z0-9_-]+$/;
+        if (!validChars.test(id)) {
+            console.warn('Video ID contains invalid characters:', id);
+            return false;
+        }
+        
+        // Basic length check (YouTube IDs are typically 11 chars, but can vary)
+        if (id.length < 10 || id.length > 20) {
+            console.warn('Video ID length is unusual:', id.length);
+            // Don't return false here as some valid IDs might be outside this range
+        }
+        
+        return true;
+    }
+    
+    // Validate video ID before creating player
+    if (!validateYouTubeId(videoId)) {
+        console.error('Invalid YouTube video ID:', videoId);
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'alert alert-danger';
+        errorContainer.textContent = 'Invalid YouTube video ID. Please check the video link.';
+        container.appendChild(errorContainer);
+        return cleanup;
+    }
+    
+    try {
+        console.log('Creating YouTube player for video:', videoId);
+        
+        // Clear any existing player
+        if (window.youTubePlayer) {
+            try {
+                window.youTubePlayer.destroy();
+            } catch (e) {
+                console.warn('Error destroying existing player:', e);
+            }
+            window.youTubePlayer = null;
         }
 
-        // Mark the video as active in the list and scroll to it
-        document.querySelectorAll('.video-item').forEach(item => {
-            const isActive = item.getAttribute('data-video-id') === video.id;
-            item.classList.toggle('active', isActive);
-
-            // Scroll the active item into view if it's not visible
-            if (isActive) {
-                item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Create a new player instance
+        const playerElement = document.createElement('div');
+        playerElement.id = 'youtubePlayer';
+        playerContainer.innerHTML = '';
+        playerContainer.appendChild(playerElement);
+        
+        // Store the current video ID for later use
+        window.currentVideoId = videoId;
+        
+        // Create the YouTube player with enhanced configuration
+        window.youTubePlayer = new YT.Player('youtubePlayer', {
+            height: '100%',
+            width: '100%',
+            videoId: videoId,
+            host: 'https://www.youtube-nocookie.com',
+            playerVars: {
+                'autoplay': 1,
+                'controls': 1,
+                'enablejsapi': 1,
+                'origin': window.location.origin,
+                'rel': 0,
+                'modestbranding': 1,
+                'playsinline': 1,
+                'fs': 1,
+                'iv_load_policy': 3,  // Hide annotations
+                'disablekb': 0,       // Enable keyboard controls
+                'cc_load_policy': 0,  // Hide captions by default
+                'widget_referrer': window.location.href
+            },
+            events: {
+                'onReady': function(event) {
+                    console.log('YouTube Player is ready');
+                    playerContainer.classList.remove('loading');
+                    event.target.playVideo();
+                    
+                    // Mark the video as active in the list and scroll to it
+                    const activeVideoId = window.currentVideoId || '';
+                    if (activeVideoId) {
+                        document.querySelectorAll('.video-item').forEach(item => {
+                            const itemId = item.getAttribute('data-video-id');
+                            const isActive = itemId === activeVideoId;
+                            item.classList.toggle('active', isActive);
+                            
+                            if (isActive) {
+                                item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }
+                        });
+                    }
+                },
+                'onStateChange': function(event) {
+                    console.log('Player state changed:', event.data);
+                },
+                'onError': function(error) {
+                    console.error('YouTube Player error:', error);
+                    handleYouTubeError(error, videoId, playerContainer);
+                }
             }
         });
 
         // Scroll the video player into view
-        const playerContainer = document.querySelector('.video-player-container');
-        if (playerContainer) {
-            playerContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const playerContainerElement = container || document.querySelector('.video-player-container');
+        if (playerContainerElement) {
+            playerContainerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
     } catch (error) {
-        console.error('Error in setVideoSource:', error);
-        // Show user-friendly error message
-        const errorMessage = 'Failed to load the video. Please try again.';
-        if (typeof showNotification === 'function') {
-            showNotification(errorMessage, 'error');
-        } else {
-            alert(errorMessage);
-        }
-        
-        // Make sure to clean up if there was an error
-        if (window.videoPlayer) {
-            try {
-                window.videoPlayer.dispose();
-            } catch (e) {
-                console.error('Error disposing video player:', e);
-            }
-            window.videoPlayer = null;
-        }
-        
-        // Show error state
-        if (videoContainer) videoContainer.classList.remove('loading');
-        if (videoElement) {
-            videoElement.style.opacity = '1';
-            videoElement.style.transition = 'opacity 0.3s ease';
-        }
-        throw error; // Re-throw to be caught by the outer try-catch
+        console.error('Error in createYouTubePlayer:', error);
+        handleYouTubeError(error, videoId, playerContainer);
     }
-};
+}
+
+// Handle YouTube player errors with detailed messages
+function handleYouTubeError(error, videoId, container) {
+    console.error('Handling YouTube error:', error);
+    
+    if (!container) {
+        console.error('No container provided for error handling');
+        return;
+    }
+    
+    // Determine error message based on error code
+    let errorMessage = 'An error occurred while loading the video. ';
+    let showRefresh = true;
+    
+    if (error && error.data) {
+        switch(error.data) {
+            case 2:
+                errorMessage = 'The video ID appears to be invalid. Please check the video link.';
+                showRefresh = false;
+                break;
+            case 5:
+                errorMessage = 'This video cannot be played in the current player. Trying alternative method...';
+                break;
+            case 100:
+                errorMessage = 'The requested video was not found. It may have been removed or made private.';
+                showRefresh = false;
+                break;
+            case 101:
+            case 150:
+                errorMessage = 'This video cannot be played due to embedding restrictions.';
+                showRefresh = false;
+                break;
+            default:
+                errorMessage = 'An error occurred while loading the video. Trying alternative method...';
+        }
+    }
+    
+    // Show error message and loading state
+    container.innerHTML = `
+        <div class="alert ${showRefresh ? 'alert-warning' : 'alert-danger'}">
+            <p>${errorMessage}</p>
+            ${showRefresh ? '<div id="fallbackPlayer" class="mt-3"></div>' : ''}
+            ${!showRefresh ? `
+                <div class="mt-3">
+                    <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" class="btn btn-primary">
+                        Watch on YouTube
+                    </a>
+                </div>` : ''}
+        </div>
+    `;
+    container.classList.remove('loading');
+
+    // Clean up any existing player
+    if (window.youTubePlayer) {
+        try {
+            if (typeof window.youTubePlayer.destroy === 'function') {
+                window.youTubePlayer.destroy();
+            }
+        } catch (e) {
+            console.error('Error destroying player:', e);
+        } finally {
+            window.youTubePlayer = null;
+        }
+    }
+
+    // Only try fallback for certain error types
+    if (showRefresh) {
+        try {
+            const fallbackPlayer = document.getElementById('fallbackPlayer');
+            if (fallbackPlayer) {
+                // Use youtube-nocookie.com for privacy and better compatibility
+                fallbackPlayer.innerHTML = `
+                    <div class="ratio ratio-16x9">
+                        <iframe 
+                            src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=1&modestbranding=1&rel=0&enablejsapi=1" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="mt-2 text-muted small">
+                        Having issues? Try <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank">watching on YouTube</a>.
+                    </div>
+                `;
+            }
+        } catch (e) {
+            console.error('Fallback player error:', e);
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <p>Failed to load video. Please try again later.</p>
+                    <div class="mt-2">
+                        <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" class="btn btn-primary me-2">
+                            Watch on YouTube
+                        </a>
+                        <button onclick="window.location.reload()" class="btn btn-outline-secondary">
+                            Refresh Page
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+}
 
 // Helper function to format date
 function formatDate(date) {

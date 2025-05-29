@@ -19,42 +19,64 @@ class VideoPlayer {
         // Create player container
         this.playerContainer = document.createElement('div');
         this.playerContainer.className = 'video-player-container';
+        this.playerContainer.style.width = '100%';
+        this.playerContainer.style.height = '100%';
         this.container.appendChild(this.playerContainer);
 
         // Add loading state
         this.showLoading();
 
-        // Load YouTube API if not already loaded
-        if (!window.YT) {
+        // Check if YouTube API is already loaded
+        if (window.YT && window.YT.Player) {
+            this.onYouTubeIframeAPIReady();
+            return;
+        }
+
+        // Create a promise that resolves when the YouTube API is ready
+        window.onYouTubeIframeAPIReady = () => {
+            console.log('YouTube API is ready');
+            this.onYouTubeIframeAPIReady();
+        };
+
+        // Load YouTube API if not already loading
+        if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
             const tag = document.createElement('script');
             tag.src = 'https://www.youtube.com/iframe_api';
             const firstScriptTag = document.getElementsByTagName('script')[0];
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-            
-            // Create global YT callback
-            window.onYouTubeIframeAPIReady = () => {
-                this.onYouTubeIframeAPIReady();
-            };
-        } else if (window.YT.loaded) {
-            this.onYouTubeIframeAPIReady();
         }
     }
 
     onYouTubeIframeAPIReady() {
-        console.log('YouTube API is ready');
+        console.log('YouTube API is ready - initializing player');
         this.hideLoading();
         
         // If we have a video to load, load it
         if (this.pendingVideoId) {
+            console.log('Loading pending video:', this.pendingVideoId);
             this.loadVideo(this.pendingVideoId);
             this.pendingVideoId = null;
+        } else {
+            console.log('No pending video to load');
         }
     }
 
     loadVideo(videoId) {
+        console.log('Attempting to load video:', videoId);
+        
         // If YouTube API is not ready, store the video ID and load it later
         if (!window.YT || !window.YT.Player) {
+            console.log('YouTube API not ready yet, queuing video:', videoId);
             this.pendingVideoId = videoId;
+            
+            // Try to load the YouTube API if not already loading
+            if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+                console.log('Loading YouTube API...');
+                const tag = document.createElement('script');
+                tag.src = 'https://www.youtube.com/iframe_api';
+                const firstScriptTag = document.getElementsByTagName('script')[0];
+                firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+            }
             return;
         }
 

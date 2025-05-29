@@ -69,17 +69,26 @@
             position: relative;
         }
         
-        /* Video Player */
-        .video-container {
+        /* Video Player Styles */
+        .video-player-container {
             position: relative;
             width: 100%;
+            height: 0;
             padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-            background: #000;
+            background-color: #000;
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--box-shadow);
             margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
+        }
+        
+        #videoPlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
         }
         
         /* YouTube Player Container */
@@ -90,7 +99,229 @@
             width: 100%;
             height: 100%;
             border: 0;
-            background: #000;
+            z-index: 1; /* Ensure player is below controls */
+            pointer-events: none; /* Allow clicks to pass through to controls */
+        }
+        
+        /* Make sure control buttons are clickable */
+        .custom-video-controls * {
+            pointer-events: auto;
+        }
+        
+        /* Custom Video Controls */
+        .custom-video-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.6));
+            padding: 15px 10px 10px;
+            display: flex !important;
+            flex-direction: column;
+            opacity: 1 !important;
+            visibility: visible !important;
+            transition: opacity 0.3s ease;
+            z-index: 2147483647;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            pointer-events: auto !important;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        /* Make sure controls are always visible on all devices */
+        .video-player-container .custom-video-controls {
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: flex !important;
+        }
+        
+        /* Error message styling */
+        .embed-error-message {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .embed-error-message .alert {
+            max-width: 500px;
+            width: 100%;
+            margin: 0;
+        }
+        
+        .embed-error-message h4 {
+            color: #fff;
+            margin-bottom: 15px;
+        }
+        
+        .embed-error-message p {
+            color: #eee;
+            margin-bottom: 20px;
+        }
+        
+        .embed-error-message .btn {
+            margin-top: 10px;
+        }
+        
+        /* Always show controls on mobile and touch devices */
+        @media (hover: none) and (pointer: coarse) {
+            .custom-video-controls {
+                opacity: 1 !important;
+                transition: none;
+            }
+        }
+        
+        /* Make controls larger and more touch-friendly on mobile */
+        @media (max-width: 768px) {
+            .control-btn {
+                padding: 12px !important;
+                font-size: 20px !important;
+                min-width: 44px; /* Minimum touch target size */
+                min-height: 44px;
+            }
+            
+            .time-display {
+                font-size: 16px !important;
+                min-width: 120px !important;
+            }
+            
+            .progress-container {
+                height: 8px !important; /* Thicker progress bar for touch */
+            }
+            
+            .menu-content button {
+                padding: 12px 16px !important;
+                font-size: 16px !important;
+            }
+        }
+        
+        /* Ensure controls are always visible */
+        .video-player-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            background-color: #000;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Make sure YouTube iframe doesn't block controls */
+        #youtubePlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
+            border: 0;
+            z-index: 1;
+        }
+        
+        .video-player-container:hover .custom-video-controls {
+            opacity: 1;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: #ff0000;
+            width: 0%;
+            transition: width 0.1s;
+        }
+        
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .left-controls, .right-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .time-display {
+            color: white;
+            font-size: 14px;
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        .speed-menu, .quality-menu {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .menu-content {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            min-width: 100px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .menu-content button {
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .menu-content button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .speed-menu:hover .menu-content,
+        .quality-menu:hover .menu-content {
+            display: block;
+        }
+        
+        .fullscreen-btn.active {
+            color: #ff0000;
         }
         
         .video-container.loading {
@@ -468,9 +699,80 @@
             <!-- Main Content -->
             <div class="col-lg-8">
                 <!-- Video Player -->
-                <div class="video-player-container mb-4">
-                    <!-- Video Player Container -->
-                    <div id="videoPlayer" data-video-player="videoPlayer"></div>
+                <div class="video-player-container mb-4" id="videoPlayerContainer">
+                    <div id="youtubePlayer"></div>
+                    
+                    <!-- Custom Video Controls -->
+                    <div class="custom-video-controls">
+                        <!-- Progress Bar -->
+                        <div class="progress-container" id="progressContainer">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                        
+                        <!-- Main Controls -->
+                        <div class="controls-row">
+                            <div class="left-controls">
+                                <!-- Play/Pause Button -->
+                                <button class="control-btn" id="playPauseBtn">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                
+                                <!-- Skip Backward 10s -->
+                                <button class="control-btn" id="skipBackwardBtn">
+                                    <i class="fas fa-backward"> 10s</i>
+                                </button>
+                                
+                                <!-- Time Display -->
+                                <div class="time-display">
+                                    <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
+                                </div>
+                            </div>
+                            
+                            <div class="right-controls">
+                                <!-- Playback Speed -->
+                                <div class="speed-menu">
+                                    <button class="control-btn" id="speedBtn">
+                                        <i class="fas fa-tachometer-alt"> 1x</i>
+                                    </button>
+                                    <div class="menu-content" id="speedMenu">
+                                        <button data-speed="0.5">0.5x</button>
+                                        <button data-speed="0.75">0.75x</button>
+                                        <button data-speed="1" class="active">1x (Normal)</button>
+                                        <button data-speed="1.25">1.25x</button>
+                                        <button data-speed="1.5">1.5x</button>
+                                        <button data-speed="2">2x</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Quality Selector -->
+                                <div class="quality-menu">
+                                    <button class="control-btn" id="qualityBtn">
+                                        <i class="fas fa-cog"></i>
+                                    </button>
+                                    <div class="menu-content" id="qualityMenu">
+                                        <button data-quality="auto">Auto</button>
+                                        <button data-quality="hd1080">1080p</button>
+                                        <button data-quality="hd720">720p</button>
+                                        <button data-quality="large">480p</button>
+                                        <button data-quality="medium">360p</button>
+                                        <button data-quality="small">240p</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Fullscreen Toggle -->
+                                <button class="control-btn" id="fullscreenBtn">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Test Button -->
+                    <div class="mt-3 text-center">
+                        <button id="testVideoBtn" class="btn btn-primary">
+                            <i class="fas fa-play me-2"></i>Test YouTube Video
+                        </button>
+                    </div>
                     <!-- Video Info -->
                     <div class="video-info">
                         <h2 class="video-title" id="currentVideoTitle">Select a video to start watching</h2>
@@ -538,61 +840,40 @@
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Video.js -->
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.min.css" rel="stylesheet" />
+    <!-- Video.js and YouTube Tech -->
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-youtube/3.0.1/Youtube.min.js"></script>
     
-    <!-- YouTube IFrame API -->
+    <!-- YouTube IFrame API with CORS workaround -->
     <script>
-        // Global variable to store the YouTube player instance
-        let ytPlayer;
+    // Global function for YouTube API to call when ready
+    function onYouTubeIframeAPIReady() {
+        console.log('YouTube API is ready');
+        window.ytAPILoaded = true;
         
-        // This function creates the YouTube player
-        function onYouTubeIframeAPIReady() {
-            // This will be called when the API is ready
-            console.log('YouTube IFrame API is ready');
-        }
-        
-        // Function to initialize YouTube player
-        function initYouTubePlayer(videoId) {
-            // Destroy existing player if it exists
-            if (ytPlayer) {
-                ytPlayer.destroy();
+        // If we have a pending video to load, create the player
+        if (window.pendingVideoId) {
+            if (typeof createYouTubePlayer === 'function') {
+                createYouTubePlayer(window.pendingVideoId, window.pendingContainer);
             }
-            
-            ytPlayer = new YT.Player('youtubePlayer', {
-                height: '100%',
-                width: '100%',
-                videoId: videoId,
-                playerVars: {
-                    'autoplay': 1,
-                    'controls': 1,
-                    'rel': 0,
-                    'showinfo': 0,
-                    'modestbranding': 1,
-                    'origin': window.location.origin
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                }
-            });
+            window.pendingVideoId = null;
+            window.pendingContainer = null;
         }
-        
-        // Function called when player is ready
-        function onPlayerReady(event) {
-            console.log('YouTube Player is ready');
-            // You can add additional functionality here when player is ready
-        }
-        
-        // Function called when player state changes
-        function onPlayerStateChange(event) {
-            // You can track video state changes here if needed
-            console.log('Player state changed:', event.data);
-        }
+    }
+    
+    // Load YouTube API
+    function loadYouTubeAPI() {
+        console.log('Loading YouTube API...');
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+    
+    // Start loading the API when the page loads
+    window.addEventListener('DOMContentLoaded', loadYouTubeAPI);
     </script>
-    <!-- Video Player Component -->
-    <script src="js/video-player.js"></script>
     
     <!-- Firebase SDK -->
     <script type="importmap">
@@ -606,6 +887,7 @@
     </script>
     
     <!-- Main App -->
+    <!-- Load the main application script -->
     <script type="module" src="js/history.js"></script>
 </body>
 </html>

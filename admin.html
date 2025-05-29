@@ -949,12 +949,14 @@
             }
         }
 
+        // Get logout elements
+        const logoutBtn = document.getElementById('logoutBtn');
+        const logoutLink = document.querySelector('a[href="#"][onclick*="logout"]');
+        
         // Event Listeners
         if (logoutBtn) {
             logoutBtn.addEventListener('click', handleLogout);
-        }
-        
-        if (logoutLink) {
+        } else if (logoutLink) {
             logoutLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 handleLogout();
