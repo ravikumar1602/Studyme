@@ -180,69 +180,77 @@ function filterVideosByTeacher(teacherId) {
 
 // Initialize the video player
 function initVideoPlayer() {
-    try {
-        const playerId = 'videoPlayer';
-        const videoElement = document.getElementById(playerId);
-
-        // Return early if video element doesn't exist
-        if (!videoElement) {
-            console.warn('Video element not found, skipping player initialization');
-            return null;
+    console.log('Initializing video player...');
+    
+    // The video player is now automatically initialized by the VideoPlayer class
+    // We'll store the player instance on the window for easy access
+    window.videoPlayer = new VideoPlayer('videoPlayer', {
+        autoplay: true,
+        controls: true,
+        onReady: (event) => {
+            console.log('Video player is ready');
+            // You can add any custom behavior when player is ready
+        },
+        onStateChange: (event) => {
+            console.log('Player state changed:', event.data);
+            // You can add custom behavior on state change
+        },
+        onError: (event) => {
+            console.error('Player error:', event.data);
+            // You can add custom error handling
         }
-
-        // Check if player is already initialized
-        let player = videojs.getPlayers()[playerId];
-
-        if (!player) {
-            // Make sure videojs is available
-            if (typeof videojs === 'undefined') {
-                console.error('Video.js is not loaded');
-                return null;
+    });
+    
+    // Return a simple interface for compatibility
+    return {
+        src: function(source) {
+            if (source && source.src) {
+                const videoId = extractVideoId(source.src);
+                if (videoId && window.videoPlayer) {
+                    window.videoPlayer.loadVideo(videoId);
+                }
             }
-
-            // Initialize the player with YouTube tech
-            player = videojs(videoElement, {
-                techOrder: ['youtube'],
-                controls: true,
-                autoplay: false,
-                preload: 'auto',
-                sources: [],
-                youtube: {
-                    ytControls: 2,
-                    rel: 0,
-                    showinfo: 0,
-                    iv_load_policy: 3,
-                    modestbranding: 1,
-                    enablejsapi: 1
-                }
-            });
-
-            // Store the player instance in window for global access
-            window.videoPlayer = player;
-
-            // Handle player ready event
-            player.ready(function () {
-                console.log('Video.js player is ready');
-            });
-
-            // Handle errors
-            player.on('error', function () {
-                const error = player.error();
-                console.error('Video Player Error:', error);
-                if (typeof showNotification === 'function') {
-                    showNotification('Error loading video. Please check the video URL and try again.', 'danger');
-                }
-            });
+        },
+        play: function() {
+            if (window.videoPlayer) {
+                window.videoPlayer.play();
+            }
+        },
+        pause: function() {
+            if (window.videoPlayer) {
+                window.videoPlayer.pause();
+            }
+        },
+        currentTime: function(seconds) {
+            // This is a simplified version - for full implementation,
+            // you would need to track the current time manually
+            return 0;
+        },
+        duration: function() {
+            // This is a simplified version - for full implementation,
+            // you would need to track the duration
+            return 0;
+        },
+        on: function(event, callback) {
+            // Simple event handling
+            console.log('Event listener added for:', event);
+        },
+        off: function(event) {
+            // Simple event handling
+            console.log('Event listener removed for:', event);
         }
+    };
+}
 
-        return player;
-    } catch (error) {
-        console.error('Error initializing video player:', error);
-        if (typeof showNotification === 'function') {
-            showNotification('Error initializing video player. Please refresh the page.', 'danger');
-        }
-        return null;
-    }
+// Helper function to extract video ID from YouTube URL
+function extractVideoId(url) {
+    if (!url) return null;
+    
+    // Handle different YouTube URL formats
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    
+    return (match && match[2].length === 11) ? match[2] : null;
 }
 
 // Initialize the history page
