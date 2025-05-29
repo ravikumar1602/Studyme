@@ -8,6 +8,7 @@
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/admin-styles.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #4e73df;
@@ -111,40 +112,65 @@
 </head>
 <body>
     <!-- Loading Spinner -->
-    <div id="loadingSpinner" class="spinner-overlay">
-        <div class="spinner-border text-light" role="status">
-            <span class="visually-hidden">Loading...</span>
+    <div id="loadingSpinner" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease-out;">
+        <div style="text-align: center; color: white;">
+            <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h4 class="mt-3" id="loadingStatus">Loading Admin Dashboard...</h4>
+            <p class="text-muted" id="loadingSubStatus">Please wait while we prepare your dashboard</p>
         </div>
     </div>
 
     <!-- Admin Container -->
-    <div class="container-fluid p-0 min-vh-100">
+    <div class="container-fluid admin-container p-0 min-vh-100">
         <div class="row g-0">
             <!-- Sidebar -->
             <div class="col-lg-2 sidebar d-none d-lg-block">
                 <div class="d-flex flex-column h-100">
                     <div class="py-4 px-3 text-center">
-                        <h4 class="mb-0">Study Portal</h4>
-                        <small class="text-white-50">Admin Panel</small>
+                        <h4>Study Portal</h4>
+                        <p class="text-white-50 mb-0">Admin Dashboard</p>
                     </div>
                     <hr class="my-0 bg-white-50">
-                    <div class="nav flex-column mt-3">
-                        <a href="#" class="nav-link active" data-section="dashboard">
-                            <i class="fas fa-fw fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                        <a href="#" class="nav-link" data-section="videos">
-                            <i class="fas fa-fw fa-video"></i>
-                            <span>Manage Videos</span>
-                        </a>
-                        <a href="#" class="nav-link" data-section="subjects">
-                            <i class="fas fa-fw fa-book"></i>
-                            <span>Subjects</span>
-                        </a>
-                        <a href="#" class="nav-link" data-section="users">
-                            <i class="fas fa-fw fa-users"></i>
-                            <span>Users</span>
-                        </a>
+                    <ul class="nav flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link active" data-section="dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="videos">
+                                <i class="fas fa-video me-2"></i> Videos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="users">
+                                <i class="fas fa-users me-2"></i> Users
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="categories">
+                                <i class="fas fa-tags me-2"></i> Categories
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="settings">
+                                <i class="fas fa-cog me-2"></i> Settings
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-section="reports">
+                                <i class="fas fa-chart-bar me-2"></i> Reports
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="mt-auto p-3">
+                        <div class="d-grid">
+                            <button id="logoutBtn" class="btn btn-outline-light">
+                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                            </button>
+                        </div>
                     </div>
                     <div class="mt-auto p-3 text-center">
                         <button id="logoutBtn" class="btn btn-sm btn-outline-light w-100">
@@ -155,7 +181,7 @@
             </div>
 
             <!-- Main Content -->
-            <div class="col-lg-10 ms-auto">
+            <div class="col-lg-10 ms-auto main-content">
                 <!-- Top Navigation -->
                 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
                     <div class="container-fluid px-4">
@@ -181,14 +207,149 @@
 
                 <!-- Page Content -->
                 <main class="main-content" id="mainContent">
+                    <!-- Dashboard Section -->
+                    <div id="dashboardSection" class="section-content">
+                        <div class="container-fluid py-4">
+                            <h2 class="mb-4">Dashboard Overview</h2>
+                            
+                            <!-- Stats Cards -->
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-3">
+                                    <div class="card border-left-primary shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                        Total Videos</div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalVideos">0</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-video fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-left-success shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                        Total Users</div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalUsers">0</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-users fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-left-info shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                        Categories</div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalCategories">0</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-tags fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border-left-warning shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                        Active Now</div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="activeUsers">0</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card shadow">
+                                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                            <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="d-flex flex-wrap gap-3">
+                                                <button class="btn btn-primary" id="addVideoBtn">
+                                                    <i class="fas fa-plus me-2"></i>Add New Video
+                                                </button>
+                                                <button class="btn btn-success" id="importVideosBtn" data-bs-toggle="modal" data-bs-target="#importPlaylistModal">
+                                                    <i class="fas fa-file-import me-2"></i>Import Playlist
+                                                </button>
+                                                <button class="btn btn-info text-white" id="manageCategoriesBtn">
+                                                    <i class="fas fa-tags me-2"></i>Manage Categories
+                                                </button>
+                                                <button class="btn btn-warning text-dark" id="viewReportsBtn">
+                                                    <i class="fas fa-chart-bar me-2"></i>View Reports
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Activity -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="card shadow">
+                                        <div class="card-header py-3">
+                                            <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover" id="recentActivityTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Action</th>
+                                                            <th>Details</th>
+                                                            <th>User</th>
+                                                            <th>Time</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="recentActivityBody">
+                                                        <!-- Will be populated by JavaScript -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Video Management Section -->
-                    <div id="videosSection" class="section-content">
+                    <div id="videosSection" class="section-content d-none">
                         <div class="container-fluid py-4">
                             <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h2 class="mb-0">Manage Videos</h2>
-                                <button id="addVideoBtn" class="btn btn-primary">
-                                    <i class="fas fa-plus me-2"></i>Add New Video
-                                </button>
+                                <h2 class="mb-0">Video Management</h2>
+                                <div>
+                                    <button class="btn btn-outline-primary me-2" id="importPlaylistBtn">
+                                        <i class="fab fa-youtube me-2"></i>Import Playlist
+                                    </button>
+                                    <button class="btn btn-primary" id="addVideoBtn">
+                                        <i class="fas fa-plus me-2"></i>Add New Video
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Search and Filter -->
@@ -221,7 +382,7 @@
                             <div class="card">
                                 <div class="card-body p-0">
                                     <div class="table-responsive">
-                                        <table class="table table-hover mb-0">
+                                        <table class="table table-hover align-middle">
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>Thumbnail</th>
@@ -259,16 +420,16 @@
                                 </div>
                                 <form id="videoForm">
                                     <div class="modal-body">
-                                        <input type="hidden" id="videoId">
+                                        <input type="hidden" id="videoId" name="id">
                                         
                                         <div class="row mb-3">
                                             <div class="col-md-6 mb-3 mb-md-0">
                                                 <label for="videoTitle" class="form-label">Video Title *</label>
-                                                <input type="text" class="form-control" id="videoTitle" required>
+                                                <input type="text" class="form-control" id="videoTitle" name="title" required>
                                             </div>
                                             <div class="col-md-3">
                                                 <label for="videoSubject" class="form-label">Subject *</label>
-                                                <select class="form-select" id="videoSubject" required>
+                                                <select class="form-select" id="videoSubject" name="subject" required>
                                                     <option value="">Select Subject</option>
                                                     <option value="history">History</option>
                                                     <option value="geography">Geography</option>
@@ -285,13 +446,24 @@
                                             </div>
                                             <div class="col-md-3">
                                                 <label for="videoTeacher" class="form-label">Teacher *</label>
-                                                <select class="form-select" id="videoTeacher" required>
+                                                <select class="form-select" id="videoTeacher" name="teacher" required>
                                                     <option value="">Select Teacher</option>
                                                     <option value="khan">Khan Sir</option>
                                                     <option value="sarah">Sarah Johnson</option>
                                                     <option value="david">David Miller</option>
                                                     <option value="priya">Priya Sharma</option>
                                                     <option value="other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label for="videoStatus" class="form-label">Status *</label>
+                                                <select class="form-select" id="videoStatus" name="status" required>
+                                                    <option value="draft">Draft</option>
+                                                    <option value="published">Published</option>
+                                                    <option value="archived">Archived</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -303,26 +475,26 @@
                                                     <i class="fas fa-magic me-1"></i> Generate with AI
                                                 </button>
                                             </div>
-                                            <textarea class="form-control" id="videoDescription" rows="3"></textarea>
+                                            <textarea class="form-control" id="videoDescription" name="description" rows="3"></textarea>
                                             <div class="form-text">Click "Generate with AI" to create a description based on the video title</div>
                                         </div>
 
                                         <div class="row mb-3">
                                             <div class="col-md-6 mb-3 mb-md-0">
                                                 <label for="videoUrl" class="form-label">YouTube Video URL *</label>
-                                                <input type="url" class="form-control" id="videoUrl" required>
+                                                <input type="url" class="form-control" id="videoUrl" name="videoUrl" required>
                                                 <div class="form-text">Paste the full YouTube URL (e.g., https://www.youtube.com/watch?v=...)</div>
                                             </div>
                                             <div class="col-md-6">
                                                 <label for="videoThumbnail" class="form-label">Thumbnail URL</label>
-                                                <input type="url" class="form-control" id="videoThumbnail">
+                                                <input type="url" class="form-control" id="videoThumbnail" name="thumbnailUrl">
                                                 <div class="form-text">Leave empty to use YouTube thumbnail</div>
                                             </div>
                                         </div>
 
                                         <div class="mb-3">
                                             <label for="videoTags" class="form-label">Tags (comma separated)</label>
-                                            <input type="text" class="form-control" id="videoTags">
+                                            <input type="text" class="form-control" id="videoTags" name="tags">
                                             <div class="form-text">Add relevant tags to help with search (e.g., class-10, cbse, important)</div>
                                         </div>
                                     </div>
@@ -334,6 +506,49 @@
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Import Playlist Modal -->
+                    <div class="modal fade" id="importPlaylistModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Import YouTube Playlist</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="playlistUrl" class="form-label">YouTube Playlist URL</label>
+                                        <input type="url" class="form-control" id="playlistUrl" placeholder="https://www.youtube.com/playlist?list=...">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="playlistSubject" class="form-label">Subject</label>
+                                        <select class="form-select" id="playlistSubject" required>
+                                            <option value="">Select a subject</option>
+                                            <option value="history">History</option>
+                                            <option value="geography">Geography</option>
+                                            <option value="mathematics">Mathematics</option>
+                                            <option value="science">Science</option>
+                                            <option value="english">English</option>
+                                            <option value="gk">General Knowledge</option>
+                                            <option value="reasoning">Reasoning</option>
+                                            <option value="polity">Polity</option>
+                                            <option value="economics">Economics</option>
+                                            <option value="environment">Environment</option>
+                                            <option value="current-affairs">Current Affairs</option>
+                                        </select>
+                                    </div>
+                                    <div id="playlistStatus" class="d-none alert alert-info"></div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="importPlaylistSubmit">
+                                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                        Import Playlist
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -363,107 +578,33 @@
                 </main>
             </div>
         </div>
-    </div> 
-                                       placeholder="https://www.youtube.com/watch?v=...">
-                            </div>
-                            <div class="form-group">
-                                <label for="video-title">Title</label>
-                                <input type="text" id="video-title" name="title" required 
-                                       placeholder="Enter video title">
-                            </div>
-                            <div class="form-group">
-                                <label for="video-description">Description</label>
-                                <textarea id="video-description" name="description" 
-                                          placeholder="Enter video description (optional)"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="video-thumbnail">Thumbnail URL (optional)</label>
-                                <input type="url" id="video-thumbnail" name="thumbnail" 
-                                       placeholder="https://example.com/thumbnail.jpg">
-                            </div>
-                            <div class="form-actions">
-                                <button type="button" id="cancel-video-btn" class="btn btn-secondary">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save Video</button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="video-list">
-                        <div class="filters">
-                            <div class="search-bar">
-                                <input type="text" id="search-videos" placeholder="Search videos...">
-                            </div>
-                            <div class="filter-group">
-                                <label for="filter-subject">Filter by Subject:</label>
-                                <select id="filter-subject">
-                                    <option value="">All Subjects</option>
-                                    <option value="history">History</option>
-                                    <option value="geography">Geography</option>
-                                    <option value="mathematics">Mathematics</option>
-                                    <option value="science">Science</option>
-                                    <option value="english">English</option>
-                                    <option value="gk">General Knowledge</option>
-                                    <option value="reasoning">Reasoning</option>
-                                    <option value="polity">Polity</option>
-                                    <option value="economics">Economics</option>
-                                    <option value="environment">Environment</option>
-                                    <option value="current-affairs">Current Affairs</option>
-                                <option value="history">History</option>
-                                <option value="geography">Geography</option>
-                                <option value="mathematics">Mathematics</option>
-                                <option value="science">Science</option>
-                                <option value="english">English</option>
-                                <option value="gk">General Knowledge</option>
-                                <option value="reasoning">Reasoning</option>
-                            </select>
-                            <select id="filter-teacher">
-                                <option value="">All Teachers</option>
-                                <option value="khan">Khan Sir</option>
-                                <option value="sarah">Sarah Johnson</option>
-                                <option value="david">David Miller</option>
-                                <option value="priya">Priya Sharma</option>
-                            </select>
-                        </div>
-                        <div id="videos-list">
-                            <!-- Videos will be loaded here -->
-                            <div class="loading">Loading videos...</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="subjects-section" class="content-section">
-                    <h2>Manage Subjects</h2>
-                    <p>Subject management coming soon...</p>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- Firebase and other scripts -->
+    <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module">
-        // Import Firebase modules
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { 
-            getAuth, 
-            onAuthStateChanged, 
-            signOut 
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { 
-            getFirestore, 
-            collection, 
-            getDocs, 
-            addDoc, 
-            updateDoc, 
-            deleteDoc, 
-            doc, 
-            query, 
-            where 
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-        
-        // Import the admin module
-        import { initAdmin } from './js/admin-new-clean.js';
-        import { showNotification } from './js/utils/notifications.js';
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+    
+    <!-- Admin Scripts (load after dependencies) -->
+    <script type="module" src="js/admin-module.js"></script>
+    
+    <!-- Firebase Initialization -->
+    <script>
+        // Debug function to log with timestamp
+        function debugLog(message, data = '') {
+            const timestamp = new Date().toISOString();
+            console.log(`[${timestamp}] ${message}`, data);
+            const debugEl = document.getElementById('debugLogs');
+            if (debugEl) {
+                const logEntry = document.createElement('div');
+                logEntry.textContent = `[${timestamp}] ${message} ${data ? JSON.stringify(data) : ''}`;
+                debugEl.appendChild(logEntry);
+            }
+        }
 
         // Firebase configuration
         const firebaseConfig = {
@@ -477,64 +618,318 @@
         };
 
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // Make auth and db available globally
-        window.auth = auth;
-        window.db = db;
-
-        // DOM Elements
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const mainContent = document.getElementById('mainContent');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const logoutLink = document.getElementById('logoutLink');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.querySelector('.sidebar');
-        const navLinks = document.querySelectorAll('.sidebar .nav-link');
-
-        // Check authentication state
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                // User is not signed in, redirect to login
-                window.location.href = 'login.html';
-            } else {
-                // User is signed in
-                console.log('User is signed in:', user.email);
-                document.getElementById('userEmail').textContent = user.email;
-                
-                // Hide loading spinner
-                loadingSpinner.style.display = 'none';
-                
-                // Initialize admin module with Firebase instances
-                initAdmin({ auth, db });
+        try {
+            debugLog('Starting Firebase initialization...');
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            debugLog('Firebase initialized successfully');
+            
+            // Check if Firebase is properly initialized
+            if (!firebase.apps.length) {
+                throw new Error('Firebase app not initialized');
             }
+            
+            // Initialize services
+            const auth = firebase.auth();
+            const db = firebase.firestore();
+            const functions = firebase.functions();
+            
+            // Use emulators in development
+            if (window.location.hostname === 'localhost') {
+                console.log('Using Firebase emulators');
+                auth.useEmulator('http://localhost:9099');
+                db.useEmulator('localhost', 8080);
+                functions.useEmulator('localhost', 5001);
+            }
+            
+            // Make them globally available
+            window.firebase = firebase;
+            window.auth = auth;
+            window.db = db;
+            window.functions = functions;
+            
+            // Dispatch custom event when Firebase is ready
+            document.dispatchEvent(new Event('firebase-ready'));
+            
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+        }
+
+        console.log('Firebase initialization complete, setting up auth state listener...');
+        
+        // Function to update loading status
+        function updateStatus(message, subMessage = '') {
+            console.log('Status:', message);
+            const statusEl = document.getElementById('loadingStatus');
+            const subStatusEl = document.getElementById('loadingSubStatus');
+            if (statusEl) statusEl.textContent = message;
+            if (subStatusEl && subMessage) subStatusEl.textContent = subMessage;
+        }
+
+        // Function to hide loading spinner
+        function hideLoadingSpinner() {
+            console.log('Hiding loading spinner');
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) {
+                // Add fade out effect
+                spinner.style.opacity = '0';
+                
+                // Remove from DOM after fade out
+                setTimeout(() => {
+                    spinner.style.display = 'none';
+                    console.log('Loading spinner hidden');
+                    
+                    // Show main content
+                    const mainContent = document.getElementById('mainContent');
+                    if (mainContent) {
+                        mainContent.style.display = 'block';
+                        mainContent.style.opacity = '0';
+                        mainContent.style.transition = 'opacity 0.3s ease-in';
+                        
+                        // Force reflow
+                        void mainContent.offsetWidth;
+                        
+                        // Fade in main content
+                        mainContent.style.opacity = '1';
+                        console.log('Main content shown');
+                    } else {
+                        console.log('Main content element not found');
+                    }
+                    
+                    // Ensure body is visible and scrollable
+                    document.body.style.overflow = 'auto';
+                    console.log('Body scroll enabled');
+                }, 300);
+            } else {
+                console.log('Spinner element not found');
+                // If spinner not found, still try to show main content
+                const mainContent = document.getElementById('mainContent');
+                if (mainContent) {
+                    mainContent.style.display = 'block';
+                    document.body.style.overflow = 'auto';
+                }
+            }
+            
+            // Force hide after 5 seconds if still visible (safety net)
+            setTimeout(() => {
+                if (spinner && spinner.style.display !== 'none') {
+                    console.warn('Force hiding spinner after timeout');
+                    spinner.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    
+                    const mainContent = document.getElementById('mainContent');
+                    if (mainContent) {
+                        mainContent.style.display = 'block';
+                    }
+                }
+            }, 5000);
+        }
+
+        // Add debug logs container
+        const debugContainer = document.createElement('div');
+        debugContainer.id = 'debugLogs';
+        debugContainer.style.position = 'fixed';
+        debugContainer.style.bottom = '0';
+        debugContainer.style.left = '0';
+        debugContainer.style.right = '0';
+        debugContainer.style.height = '200px';
+        debugContainer.style.overflow = 'auto';
+        debugContainer.style.background = '#333';
+        debugContainer.style.color = '#0f0';
+        debugContainer.style.padding = '10px';
+        debugContainer.style.zIndex = '99999';
+        debugContainer.style.fontFamily = 'monospace';
+        debugContainer.style.fontSize = '12px';
+        document.body.appendChild(debugContainer);
+
+        debugLog('Debug logging initialized');
+        
+        // Wait for Firebase to be ready
+        updateStatus('Initializing Firebase...');
+        debugLog('Waiting for firebase-ready event...');
+        
+        // Create a promise that resolves when firebase is ready
+        const firebaseReady = new Promise((resolve) => {
+            document.addEventListener('firebase-ready', resolve, { once: true });
+            // Add timeout in case the event never fires
+            setTimeout(() => {
+                debugLog('Firebase ready event timeout, continuing anyway...');
+                resolve();
+            }, 5000);
+        });
+        
+        firebaseReady.then(() => {
+            console.log('Firebase is ready, initializing admin module...');
+            updateStatus('Firebase ready, checking authentication...');
+            
+            // DOM Elements
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const mainContent = document.getElementById('mainContent');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const logoutLink = document.getElementById('logoutLink');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.querySelector('.sidebar');
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+
+            console.log('DOM elements loaded, setting up auth state listener...');
+            
+            // Set a timeout to ensure loading spinner is hidden even if auth state doesn't change
+            const authTimeout = setTimeout(() => {
+                debugLog('Auth state change timeout reached');
+                updateStatus('Taking longer than expected...');
+                hideLoadingSpinner();
+                
+                // Force show any hidden content
+                const hiddenElements = document.querySelectorAll('[style*="display: none"]');
+                hiddenElements.forEach(el => {
+                    el.style.display = '';
+                    debugLog('Forced display for element:', el.id || el.className);
+                });
+                
+            }, 5000); // 5 second timeout
+            
+            // Check authentication state
+            const unsubscribe = auth.onAuthStateChanged(async (user) => {
+                console.log('Auth state changed, user:', user ? user.email : 'Not logged in');
+                
+                // Clear the timeout since we got auth state
+                clearTimeout(authTimeout);
+                
+                if (!user) {
+                    // User is not signed in, redirect to login
+                    console.log('No user found, redirecting to login...');
+                    updateStatus('Redirecting to login...');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                try {
+                    // User is signed in
+                    console.log('User is signed in:', user.email);
+                    updateStatus('Loading admin interface...');
+                    
+                    const userEmailElement = document.getElementById('userEmail');
+                    if (userEmailElement) {
+                        userEmailElement.textContent = user.email;
+                    }
+                    
+                    // Show the main content before initializing admin module
+                    if (mainContent) {
+                        mainContent.style.display = 'block';
+                    }
+                    
+                    // Hide loading spinner after a short delay to ensure UI is ready
+                    setTimeout(hideLoadingSpinner, 500);
+                    
+                    // Import and initialize admin module
+                    try {
+                        console.log('Importing admin module...');
+                        const adminModule = await import('./js/admin-module.js');
+                        if (adminModule && typeof adminModule.initAdmin === 'function') {
+                            console.log('Initializing admin module...');
+                            await adminModule.initAdmin({ auth, db });
+                            console.log('Admin module initialized successfully');
+                        } else {
+                            console.warn('initAdmin function not found in module');
+                            if (mainContent) mainContent.style.display = 'block';
+                        }
+                    } catch (error) {
+                        console.error('Error loading admin module:', error);
+                        if (mainContent) mainContent.style.display = 'block';
+                    }
+
+                    // Mobile sidebar toggle
+                    if (sidebarToggle && sidebar) {
+                        console.log('Setting up sidebar toggle...');
+                        sidebarToggle.addEventListener('click', () => {
+                            console.log('Sidebar toggle clicked');
+                            sidebar.classList.toggle('d-none');
+                        });
+                    } else {
+                        console.warn('Sidebar or toggle button not found', { sidebarToggle, sidebar });
+                    }
+
+                    // Close sidebar when clicking on a nav link (mobile)
+                    if (navLinks.length > 0 && sidebar) {
+                        console.log('Setting up nav links for mobile...');
+                        navLinks.forEach(link => {
+                            link.addEventListener('click', () => {
+                                if (window.innerWidth < 992) {
+                                    sidebar.classList.add('d-none');
+                                }
+                            });
+                        });
+                    }
+
+                    // Handle window resize
+                    window.addEventListener('resize', () => {
+                        if (window.innerWidth >= 992 && sidebar) {
+                            sidebar.classList.remove('d-none');
+                        }
+                    });
+                    
+                    // Show the main content
+                    document.body.style.visibility = 'visible';
+                } catch (error) {
+                    console.error('Error in auth state change handler:', error);
+                    // Ensure loading spinner is hidden even if there's an error
+                    if (loadingSpinner) loadingSpinner.style.display = 'none';
+                    if (mainContent) mainContent.style.display = 'block';
+                }
+            });
+            
+            // Set a timeout to ensure loading spinner is hidden even if auth state doesn't change
+            setTimeout(() => {
+                console.log('Auth state change timeout reached');
+                const spinner = document.getElementById('loadingSpinner');
+                if (spinner && spinner.style.display !== 'none') {
+                    console.log('Forcing loading spinner to hide');
+                    spinner.style.display = 'none';
+                }
+                const main = document.getElementById('mainContent');
+                if (main) main.style.display = 'block';
+            }, 5000); // 5 second timeout
         });
 
         // Handle logout
         async function handleLogout() {
             try {
-                await signOut(auth);
+                // Use firebase.auth().signOut() instead of signOut(auth)
+                await firebase.auth().signOut();
+                console.log('User signed out successfully');
                 window.location.href = 'login.html';
             } catch (error) {
                 console.error('Logout error:', error);
-                showNotification('Error signing out. Please try again.', 'error');
+                // Make sure showNotification function exists before calling it
+                if (typeof showNotification === 'function') {
+                    showNotification('Error signing out. Please try again.', 'error');
+                } else {
+                    alert('Error signing out. Please try again.');
+                }
             }
         }
 
         // Load admin module
         async function loadAdminModule() {
             try {
+                console.log('Loading admin module...');
                 // Import and initialize admin module
-                const { initAdmin } = await import('./js/admin-new-clean.js');
-                if (typeof initAdmin === 'function') {
-                    await initAdmin();
+                const adminModule = await import('./js/admin-module.js');
+                if (adminModule && typeof adminModule.initAdmin === 'function') {
+                    console.log('Initializing admin module...');
+                    await adminModule.initAdmin({ auth, db });
+                    console.log('Admin module initialized successfully');
                 } else {
-                    throw new Error('Admin module initialization function not found');
+                    console.warn('Admin module or initAdmin function not found');
+                    // If we can't load the admin module, at least show the UI
+                    const mainContent = document.getElementById('mainContent');
+                    if (mainContent) mainContent.style.display = 'block';
                 }
             } catch (error) {
                 console.error('Error loading admin module:', error);
+                // Ensure UI is shown even if admin module fails to load
+                const mainContent = document.getElementById('mainContent');
+                if (mainContent) mainContent.style.display = 'block';
                 showNotification('Error initializing admin interface. Please refresh the page.', 'error');
                 
                 // Show error message in the UI
@@ -566,35 +961,190 @@
             });
         }
 
-        // Mobile sidebar toggle
-        if (sidebarToggle && sidebar) {
-            sidebarToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('d-none');
-            });
-        }
-
-        // Close sidebar when clicking on a nav link (mobile)
-        if (navLinks.length > 0 && sidebar) {
-            navLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    if (window.innerWidth < 992) {
-                        sidebar.classList.add('d-none');
-                    }
-                });
-            });
-        }
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 992 && sidebar) {
-                sidebar.classList.remove('d-none');
-            }
-        });
-
         // Show loading state initially
         if (loadingSpinner) {
             loadingSpinner.style.display = 'flex';
         }
+    </script>
+    
+    <!-- Import Playlist Handler -->
+    <script>
+        // Function to extract playlist ID from YouTube URL
+        function extractPlaylistId(url) {
+            try {
+                // Handle youtu.be URLs
+                if (url.includes('youtu.be/')) {
+                    const match = url.match(/youtu\.be\/([^?&#]+)/);
+                    return match ? match[1] : null;
+                }
+                
+                // Handle youtube.com URLs
+                const urlObj = new URL(url);
+                if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+                    // Check for playlist ID in list parameter
+                    if (urlObj.searchParams.has('list')) {
+                        return urlObj.searchParams.get('list');
+                    }
+                    // Check for video ID in v parameter
+                    if (urlObj.searchParams.has('v')) {
+                        return urlObj.searchParams.get('v');
+                    }
+                }
+                
+                // If it's just an ID
+                if (url.match(/^[\w-]+$/)) {
+                    return url;
+                }
+                
+                return null;
+            } catch (e) {
+                console.error('Error extracting playlist ID:', e);
+                return null;
+            }
+        }
+
+        // Initialize import playlist functionality after Firebase is ready
+        document.addEventListener('firebase-ready', function() {
+            console.log('=== INITIALIZING IMPORT PLAYLIST ===');
+            
+            // Get the import button and modal elements
+            const importBtn = document.getElementById('importPlaylistBtn');
+            const modalElement = document.getElementById('importPlaylistModal');
+            const importSubmitBtn = document.getElementById('importPlaylistSubmit');
+            const playlistUrlInput = document.getElementById('playlistUrl');
+            const playlistSubject = document.getElementById('playlistSubject');
+            const playlistStatus = document.getElementById('playlistStatus');
+            
+            if (!importBtn || !modalElement || !importSubmitBtn) {
+                console.error('Required elements not found for import playlist');
+                return;
+            }
+            
+            console.log('All import playlist elements found');
+            
+            // Initialize the modal
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            
+            // Function to show status message
+            function showStatus(message, type = 'info') {
+                if (!playlistStatus) return;
+                playlistStatus.textContent = message;
+                playlistStatus.className = `alert alert-${type} mt-3`;
+                playlistStatus.classList.remove('d-none');
+            }
+            
+            // Handle import playlist button click
+            importBtn.addEventListener('click', function() {
+                console.log('Import Playlist button clicked');
+                // Reset form fields
+                if (playlistUrlInput) playlistUrlInput.value = '';
+                if (playlistSubject) playlistSubject.value = '';
+                if (playlistStatus) playlistStatus.classList.add('d-none');
+                
+                // Show the modal
+                modal.show();
+            });
+            
+            // Handle import submission
+            importSubmitBtn.addEventListener('click', async function() {
+                console.log('Import Playlist submit clicked');
+                
+                const playlistUrl = playlistUrlInput ? playlistUrlInput.value.trim() : '';
+                const subject = playlistSubject ? playlistSubject.value : '';
+                
+                // Validate inputs
+                if (!playlistUrl) {
+                    showStatus('Please enter a YouTube playlist URL', 'danger');
+                    return;
+                }
+                
+                if (!subject) {
+                    showStatus('Please select a subject', 'danger');
+                    return;
+                }
+                
+                // Show loading state
+                const spinner = importSubmitBtn.querySelector('.spinner-border');
+                if (spinner) spinner.classList.remove('d-none');
+                importSubmitBtn.disabled = true;
+                showStatus('Importing playlist, please wait...', 'info');
+                
+                try {
+                    console.log('Starting playlist import:', { playlistUrl, subject });
+                    showStatus('Fetching playlist information...', 'info');
+                    
+                    // Extract playlist ID from URL
+                    const playlistId = extractPlaylistId(playlistUrl);
+                    if (!playlistId) {
+                        throw new Error('Invalid YouTube playlist URL');
+                    }
+                    
+                    // Call the Cloud Function to import the playlist
+                    console.log('Calling Cloud Function with:', { playlistId, subject });
+                    
+                    // Use the callable function
+                    const importPlaylist = firebase.functions().httpsCallable('getPlaylistVideos');
+                    
+                    // Call the function
+                    const result = await importPlaylist({
+                        playlistId: playlistId,
+                        subject: subject,
+                        maxResults: 50 // Optional: limit number of videos to import
+                    });
+                    
+                    console.log('Playlist import result:', result);
+                    
+                    if (result.data && result.data.success) {
+                        const message = result.data.message || `Successfully imported ${result.data.count || 'some'} videos!`;
+                        showStatus(message, 'success');
+                        
+                        // Refresh the videos list if the function exists
+                        if (typeof window.loadVideos === 'function') {
+                            console.log('Refreshing videos list...');
+                            window.loadVideos();
+                        } else {
+                            console.log('loadVideos function not found, page refresh required');
+                            // Force page refresh after a short delay
+                            setTimeout(() => window.location.reload(), 1500);
+                        }
+                        
+                        // Close modal after delay
+                        setTimeout(() => {
+                            modal.hide();
+                        }, 2000);
+                    } else {
+                        const errorMsg = result.data?.error || 'Failed to import playlist';
+                        console.error('Import failed:', errorMsg);
+                        throw new Error(errorMsg);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error importing playlist:', error);
+                    let errorMessage = 'Error importing playlist: ';
+                    
+                    // Handle specific error cases
+                    if (error.message.includes('quota')) {
+                        errorMessage += 'YouTube API quota exceeded. Please try again later.';
+                    } else if (error.message.includes('invalid')) {
+                        errorMessage += 'Invalid playlist URL or ID. Please check and try again.';
+                    } else if (error.message.includes('not found')) {
+                        errorMessage += 'Playlist not found. Please check the URL.';
+                    } else {
+                        errorMessage += error.message || 'Unknown error occurred';
+                    }
+                    
+                    showStatus(errorMessage, 'danger');
+                } finally {
+                    if (spinner) spinner.classList.add('d-none');
+                    importSubmitBtn.disabled = false;
+                }
+            });
+                
+            console.log('Import playlist handler initialized successfully');
+        });
     </script>
 </body>
 </html>

@@ -1,13 +1,121 @@
 // js/main.js
 
-// Load YouTube IFrame API
-const tag = document.createElement('script');
-tag.src = 'https://www.youtube.com/iframe_api';
-const firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
 // Store player instances
 let players = [];
+
+// Initialize the application
+function initApp() {
+  // Show loader
+  const loader = document.getElementById("loading-overlay");
+  if (loader) loader.style.display = "flex";
+
+  // Load header and footer
+  includeHTML("header.html", "header", () => {
+    highlightActiveNav();
+    includeHTML("footer.html", "footer", () => {
+      if (loader) loader.style.display = "none";
+    });
+  });
+
+  // Initialize video player when YouTube API is ready
+  window.onYouTubeIframeAPIReady = function() {
+    console.log('YouTube API is ready');
+    // The actual video loading will be triggered by the admin panel data
+  };
+}
+
+// Function to initialize video player with videos from admin panel
+function initVideoPlayer() {
+  const carousel = document.getElementById("live-carousel");
+  if (!carousel || !window.YT || !window.YT.Player) return;
+  
+  // Clear existing content
+  carousel.innerHTML = '';
+  
+  // Create video elements based on liveVideosConfig
+  liveVideosConfig.forEach((video, index) => {
+    const card = document.createElement("div");
+    card.className = "live-card";
+    card.dataset.index = index;
+    card.dataset.description = video.description || '';
+    
+    const playerId = `ytplayer-${Date.now()}-${index}`;
+    card.innerHTML = `
+      <div class="live-badge">LIVE NOW</div>
+      <div id="${playerId}" class="youtube-player"></div>
+    `;
+    
+    carousel.appendChild(card);
+    
+    // Initialize YouTube player
+    const player = new YT.Player(playerId, {
+      videoId: video.videoId,
+      playerVars: {
+        autoplay: index === 0 ? 1 : 0,
+        mute: 1,
+        rel: 0,
+        modestbranding: 1,
+        enablejsapi: 1,
+        origin: window.location.origin,
+        controls: 1,
+        disablekb: 1,
+        fs: 0,
+        iv_load_policy: 3,
+        showinfo: 0,
+        disable_picture_in_picture: 1,
+        playsinline: 1,
+        cc_load_policy: 0,
+        widget_referrer: window.location.href
+      },
+      events: {
+        'onReady': (event) => {
+          if (index === 0) {
+            event.target.playVideo();
+          }
+        }
+      }
+    });
+    
+    players.push(player);
+  });
+  
+  // Initialize carousel functionality
+  initCarousel();
+}
+
+// Function to fetch videos from admin panel
+async function fetchVideosFromAdmin() {
+  try {
+    // This should be replaced with your actual admin panel API endpoint
+    const response = await fetch('/api/admin/videos');
+    if (!response.ok) {
+      throw new Error('Failed to fetch videos');
+    }
+    const data = await response.json();
+    
+    // Initialize videos with data from admin panel
+    if (window.initVideosFromAdmin) {
+      window.initVideosFromAdmin(data);
+    }
+  } catch (error) {
+    console.error('Error fetching videos:', error);
+    // You can show an error message to the user here
+  }
+}
+
+// Start the application when the page loads
+document.addEventListener('DOMContentLoaded', initApp);
+
+// Load YouTube IFrame API after the page is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  const firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  
+  // Fetch videos from admin panel
+  fetchVideosFromAdmin();
+});
 
 // Show the loader immediately when the script runs
 const loader = document.getElementById("loading-overlay");
@@ -163,6 +271,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (window.YT && window.YT.Player) {
       const player = new YT.Player(playerId, playerConfig);
       players.push(player);
+      
+      // Force play the first video
+      if (index === 0) {
+        player.addEventListener('onReady', function() {
+          player.mute();
+          player.playVideo();
+          // Unmute after a short delay to ensure autoplay works
+          setTimeout(() => {
+            player.unMute();
+          }, 1000);
+        });
+      }
     }
     carousel.appendChild(card);
 

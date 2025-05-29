@@ -28,6 +28,36 @@ const SUBJECTS = {
     'current-affairs': 'Current Affairs'
 };
 
+// YouTube API Key (you should move this to a secure server-side implementation)
+// This is just for demonstration - in production, use a server-side proxy
+const YOUTUBE_API_KEY = 'YOUR_YOUTUBE_API_KEY'; // This is now only used for client-side operations
+
+// Import Firebase Functions
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
+// Initialize Firebase app
+const firebaseConfig = {
+    // Your Firebase config will be initialized elsewhere in the file
+};
+
+// Initialize Firebase if not already initialized
+let app;
+if (!firebase.apps.length) {
+    app = firebase.initializeApp(firebaseConfig);
+} else {
+    app = firebase.app();
+}
+
+// Initialize Cloud Functions
+const functions = getFunctions(app);
+
+// Function to extract video ID from YouTube URL
+function extractVideoId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
 // Admin Dashboard Functionality
 document.addEventListener('DOMContentLoaded', async function() {
     // Check if user is authenticated
@@ -36,6 +66,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         window.location.href = 'login.html';
         return;
     }
+    
+    // Initialize playlist import functionality after authentication
+    initPlaylistImport();
 
     // Initialize Firestore collection reference
     const videosCollection = collection(db, 'videos');
@@ -69,6 +102,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     function initAdmin() {
         setupEventListeners();
         loadVideos();
+        initPlaylistImport();
     }
 
     // Set up event listeners
@@ -106,7 +140,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Auto-fill video title when URL changes
         videoUrlInput.addEventListener('change', fetchVideoInfo);
     }
-
 
     // Show a specific section
     function showSection(sectionId) {
@@ -410,52 +443,233 @@ document.addEventListener('DOMContentLoaded', async function() {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const videoId = btn.getAttribute('data-id');
+                // Show delete confirmation modal
+                const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+                
+                // Store the video ID in the modal for later use
+                if (confirmDeleteBtn) {
+                    confirmDeleteBtn.onclick = () => {
+                        deleteVideo(videoId);
+                        deleteModal.hide();
+                    };
+                }
+                
+                deleteModal.show();
+            });
+        });
     }
-}
-
-// Update an existing video in Firestore
-async function updateVideo(updatedVideo) {
-    try {
-        // Update timestamp
-        const videoWithTimestamp = {
-            ...updatedVideo,
-            updatedAt: serverTimestamp()
-        };
-
-        // Update in Firestore
-        const videoRef = doc(db, 'videos', currentEditId);
-        await updateDoc(videoRef, videoWithTimestamp);
-        
-        // The real-time listener will handle updating the UI
-        showNotification('Video updated successfully!', 'success');
-        return { id: currentEditId, ...videoWithTimestamp };
-    } catch (error) {
-        console.error('Error updating video:', error);
-        showNotification('Failed to update video. Please try again.', 'error');
-        throw error;
-    }
-}
-
-// Delete a video from Firestore
-async function deleteVideo(id) {
-    if (!confirm('Are you sure you want to delete this video?')) {
-        return;
-        const options = { year: 'numeric', month: 'short', day: 'numeric' };
-        return new Date(dateString).toLocaleDateString('en-US', options);
-    }
-    
-    // Helper function to format subject
-    function formatSubject(subject) {
-        if (!subject) return '';
-        return subject.charAt(0).toUpperCase() + subject.slice(1);
-    }
-    
-    // Show notification
-    function showNotification(message, type = 'success') {
-        // In a real app, you might use a toast notification library
-        alert(`${type.toUpperCase()}: ${message}`);
-    }
-    
-    // Initialize the admin dashboard
-    initAdmin();
 });
+
+// Helper function to format subject
+function formatSubject(subject) {
+    if (!subject) return '';
+    return subject.charAt(0).toUpperCase() + subject.slice(1);
+}
+
+// Show notification
+function showNotification(message, type = 'success') {
+    // In a real app, you might use a toast notification library
+    alert(`${type.toUpperCase()}: ${message}`);
+}
+
+// Initialize playlist import functionality
+function initPlaylistImport() {
+    console.log('Initializing playlist import...');
+    const importPlaylistBtn = document.getElementById('importPlaylistBtn');
+    const importPlaylistSubmit = document.getElementById('importPlaylistSubmit');
+    const playlistUrlInput = document.getElementById('playlistUrl');
+    const playlistSubject = document.getElementById('playlistSubject');
+    const playlistStatus = document.getElementById('playlistStatus');
+    
+    console.log('Import playlist elements:', { importPlaylistBtn, importPlaylistSubmit, playlistUrlInput, playlistSubject, playlistStatus });
+    
+    if (!importPlaylistBtn) {
+        console.error('Import playlist button not found!');
+        return;
+    }
+    
+    // Open import modal
+    importPlaylistBtn.addEventListener('click', () => {
+        console.log('Import playlist button clicked');
+        const modalElement = document.getElementById('importPlaylistModal');
+        if (!modalElement) {
+            console.error('Import playlist modal not found!');
+            return;
+        }
+        
+        console.log('Bootstrap object:', typeof bootstrap);
+        console.log('Bootstrap.Modal:', typeof bootstrap?.Modal);
+        
+        try {
+            const importModal = new bootstrap.Modal(modalElement);
+            if (playlistUrlInput) playlistUrlInput.value = '';
+            if (playlistSubject) playlistSubject.value = '';
+            if (playlistStatus) playlistStatus.classList.add('d-none');
+            importModal.show();
+            console.log('Modal shown successfully');
+        } catch (error) {
+            console.error('Error showing import modal:', error);
+        }
+    });
+    
+    // Handle playlist import
+    if (importPlaylistSubmit) {
+        importPlaylistSubmit.addEventListener('click', async () => {
+            const playlistUrl = playlistUrlInput.value.trim();
+            const subject = playlistSubject.value;
+            
+            if (!playlistUrl) {
+                showStatus('Please enter a playlist URL', 'error');
+                return;
+            }
+            
+            if (!subject) {
+                showStatus('Please select a subject', 'error');
+                return;
+            }
+            
+            // Extract playlist ID from URL
+            const playlistId = extractPlaylistId(playlistUrl);
+            if (!playlistId) {
+                showStatus('Invalid YouTube playlist URL', 'error');
+                return;
+            }
+            
+            // Show loading state
+            const spinner = importPlaylistSubmit.querySelector('.spinner-border');
+            spinner.classList.remove('d-none');
+            importPlaylistSubmit.disabled = true;
+            showStatus('Fetching playlist information...', 'info');
+            
+            try {
+                // Call the Cloud Function to get playlist videos
+                const getPlaylistVideos = functions.httpsCallable('getPlaylistVideos');
+                const result = await getPlaylistVideos({
+                    playlistId: playlistId,
+                    maxResults: 50
+                });
+                
+                const { videos } = result.data;
+                
+                if (!videos || videos.length === 0) {
+                    throw new Error('No videos found in the playlist');
+                }
+                
+                // Add videos to Firestore
+                let successCount = 0;
+                let duplicateCount = 0;
+                
+                for (const video of videos) {
+                    try {
+                        // Check if video already exists
+                        const videoExists = await checkIfVideoExists(video.videoId);
+                        
+                        if (!videoExists) {
+                            await addVideo({
+                                title: video.title,
+                                description: video.description || '',
+                                videoId: video.videoId,
+                                thumbnailUrl: video.thumbnailUrl,
+                                subject: subject,
+                                tags: [],
+                                duration: video.duration || 0,
+                                createdAt: serverTimestamp(),
+                                updatedAt: serverTimestamp()
+                            });
+                            successCount++;
+                        } else {
+                            duplicateCount++;
+                        }
+                    } catch (error) {
+                        console.error('Error adding video:', video.videoId, error);
+                    }
+                }
+                
+                // Show success message
+                let message = `Successfully imported ${successCount} videos.`;
+                if (duplicateCount > 0) {
+                    message += ` ${duplicateCount} videos were already in the database.`;
+                }
+                showStatus(message, 'success');
+                
+                // Reload videos after import
+                loadVideos();
+                
+            } catch (error) {
+                console.error('Error importing playlist:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                spinner.classList.add('d-none');
+                importPlaylistSubmit.disabled = false;
+            }
+        });
+    }
+    
+    // Helper function to show status messages
+    function showStatus(message, type = 'info') {
+        const statusElement = document.getElementById('playlistStatus');
+        if (!statusElement) return;
+        
+        statusElement.textContent = message;
+        statusElement.className = `alert alert-${type}`;
+        statusElement.classList.remove('d-none');
+    }
+}
+
+// Extract playlist ID from URL
+function extractPlaylistId(url) {
+    if (!url) return null;
+    
+    try {
+        // Try to extract using URL API first
+        try {
+            const urlObj = new URL(url);
+            const listId = urlObj.searchParams.get('list');
+            if (listId) return listId.split('#')[0].trim();
+        } catch (e) {
+            // If URL parsing fails, continue with regex
+        }
+        
+        // Common patterns for playlist URLs
+        const patterns = [
+            /[&?]list=([^&#]+)/i,  // Standard format
+            /youtube\.com\/playlist\?list=([^&#]+)/i,  // Direct playlist URL
+            /youtube\.com\/watch\?.*list=([^&#]+)/i,   // Watch URL with list parameter
+            /youtu\.be\/.*[?&]list=([^&#]+)/i,        // Short URL with list parameter
+            /youtube\.com\/embed\/videoseries\?list=([^&#]+)/i,  // Embedded playlist
+            /youtube\.com\/watch\?v=[^&]+&list=([^&#]+)/i  // Watch URL with video ID and list parameter
+        ];
+        
+        // Try each pattern
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match && match[1]) {
+                return match[1].split('&')[0].split('#')[0].trim();
+            }
+        }
+        
+        // Try to extract from the end of the URL as a last resort
+        const listMatch = url.split('list=')[1];
+        if (listMatch) {
+            return listMatch.split('&')[0].split('#')[0].trim();
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Error extracting playlist ID:', error);
+        return null;
+    }
+}
+
+// Check if a video already exists in the database
+async function checkIfVideoExists(videoId) {
+    try {
+        const q = query(collection(db, 'videos'), where('videoId', '==', videoId));
+        const querySnapshot = await getDocs(q);
+        return !querySnapshot.empty;
+    } catch (error) {
+        console.error('Error checking if video exists:', error);
+        return false;
+    }
+}
